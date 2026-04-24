@@ -1,0 +1,19 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Interpretation {
+  id              Int      @id @default(autoincrement())
+  category        String   // Personality, Money, Love, Intellect, Talent
+  key             String   @unique // e.g., 'Mars_Aries', 'Mars_House_1'
+  content         String
+  detailedContent String?  // Optional detailed explanation
+}
