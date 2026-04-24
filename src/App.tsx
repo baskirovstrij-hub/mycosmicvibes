@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import Layout from './components/Layout';
 import Home from './components/Home';
 import Header from './components/Header';
@@ -16,6 +16,58 @@ import { useUserStore } from './store/userStore';
 import { useSynastryStore } from './store/synastryStore';
 
 type AppMode = 'home' | 'experience' | 'synastry' | 'profile' | 'analysis';
+
+const SynastryBackground = memo(({ stars }: { stars: any[] }) => (
+  <div className="fixed inset-0 z-[-10] pointer-events-none overflow-hidden">
+    <div className="absolute inset-0 bg-red-950/20" />
+    <motion.div 
+      animate={{ opacity: [0.15, 0.25, 0.15], scale: [1, 1.05, 1] }}
+      transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+      className="absolute top-[10%] left-[5%] w-[80vw] h-[80vw] bg-red-600/25 rounded-full blur-[180px]" 
+    />
+    <motion.div 
+      animate={{ opacity: [0.1, 0.2, 0.1], scale: [1, 1.03, 1] }}
+      transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+      className="absolute bottom-[10%] right-[10%] w-[70vw] h-[70vw] bg-rose-600/20 rounded-full blur-[160px]" 
+    />
+    {stars.map((star) => (
+      <motion.div
+        key={`syn-star-${star.id}`}
+        initial={{ opacity: star.initialOpacity, top: star.top, left: star.left, scale: star.scale }}
+        animate={{ opacity: star.animateOpacity, scale: star.animateScale }}
+        transition={{ duration: star.duration, repeat: Infinity, ease: "linear", delay: star.delay }}
+        className="absolute bg-white rounded-full shadow-[0_0_8px_1.5px_rgba(239,68,68,0.5)]"
+        style={{ width: `${star.size}px`, height: `${star.size}px` }}
+      />
+    ))}
+  </div>
+));
+
+const AnalysisBackground = memo(({ stars }: { stars: any[] }) => (
+  <div className="fixed inset-0 z-[-10] pointer-events-none overflow-hidden">
+    <div className="absolute inset-0 bg-emerald-950/20" />
+    <motion.div 
+      animate={{ opacity: [0.1, 0.2, 0.1], scale: [1, 1.05, 1] }}
+      transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+      className="absolute top-[10%] left-[15%] w-[80vw] h-[80vw] bg-emerald-600/20 rounded-full blur-[180px]" 
+    />
+    <motion.div 
+      animate={{ opacity: [0.1, 0.2, 0.1], scale: [1, 1.03, 1] }}
+      transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+      className="absolute bottom-[10%] right-[5%] w-[70vw] h-[70vw] bg-teal-600/15 rounded-full blur-[160px]" 
+    />
+    {stars.map((star) => (
+      <motion.div
+        key={`ana-star-${star.id}`}
+        initial={{ opacity: star.initialOpacity, top: star.top, left: star.left, scale: star.scale }}
+        animate={{ opacity: star.animateOpacity, scale: star.animateScale }}
+        transition={{ duration: Math.max(star.duration, 5), repeat: Infinity, ease: "linear", delay: star.delay }}
+        className="absolute bg-white rounded-full shadow-[0_0_8px_2px_rgba(52,211,153,0.4)]"
+        style={{ width: `${star.size}px`, height: `${star.size}px` }}
+      />
+    ))}
+  </div>
+));
 
 export default function App() {
   const [mode, setMode] = useState<AppMode>('home');
@@ -55,7 +107,7 @@ export default function App() {
   };
 
   const synastryStars = useMemo(() => {
-    return Array.from({ length: 60 }).map((_, i) => ({
+    return Array.from({ length: 30 }).map((_, i) => ({
       id: i,
       initialOpacity: Math.random() * 0.5 + 0.1,
       top: `${Math.random() * 100}%`,
@@ -156,120 +208,10 @@ export default function App() {
       </div>
 
       {/* Synastry Background Refined (Red Glow & Stars) */}
-      {mode === 'synastry' && (
-        <div className="fixed inset-0 z-[-10] pointer-events-none overflow-hidden">
-          {/* Intense Cosmic Red Glows */}
-          <div className="absolute inset-0 bg-red-950/20" />
-          <motion.div 
-            animate={{ 
-              opacity: [0.15, 0.25, 0.15],
-              scale: [1, 1.05, 1]
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute top-[10%] left-[5%] w-[80vw] h-[80vw] bg-red-600/25 rounded-full blur-[180px]" 
-          />
-          <motion.div 
-            animate={{ 
-              opacity: [0.1, 0.2, 0.1],
-              scale: [1, 1.03, 1]
-            }}
-            transition={{
-              duration: 10,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 1
-            }}
-            className="absolute bottom-[10%] right-[10%] w-[70vw] h-[70vw] bg-rose-600/20 rounded-full blur-[160px]" 
-          />
-          
-          {/* Synastry Stars */}
-          {synastryStars.map((star) => (
-            <motion.div
-              key={`syn-star-${star.id}`}
-              initial={{ 
-                  opacity: star.initialOpacity, 
-                  top: star.top, 
-                  left: star.left,
-                  scale: star.scale
-              }}
-              animate={{ 
-                  opacity: star.animateOpacity,
-                  scale: star.animateScale
-              }}
-              transition={{ 
-                  duration: star.duration, 
-                  repeat: Infinity, 
-                  ease: "linear",
-                  delay: star.delay 
-              }}
-              className="absolute bg-white rounded-full shadow-[0_0_8px_1.5px_rgba(239,68,68,0.5)]"
-              style={{ width: `${star.size}px`, height: `${star.size}px` }}
-            />
-          ))}
-        </div>
-      )}
+      {mode === 'synastry' && <SynastryBackground stars={synastryStars} />}
 
       {/* Analysis Background (Emerald/Teal Glow & Stars) */}
-      {mode === 'analysis' && (
-        <div className="fixed inset-0 z-[-10] pointer-events-none overflow-hidden">
-          {/* Intense Cosmic Emerald Glows */}
-          <div className="absolute inset-0 bg-emerald-950/20" />
-          <motion.div 
-            animate={{ 
-              opacity: [0.1, 0.2, 0.1],
-              scale: [1, 1.05, 1]
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute top-[10%] left-[15%] w-[80vw] h-[80vw] bg-emerald-600/20 rounded-full blur-[180px]" 
-          />
-          <motion.div 
-            animate={{ 
-              opacity: [0.1, 0.2, 0.1],
-              scale: [1, 1.03, 1]
-            }}
-            transition={{
-              duration: 10,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 2
-            }}
-            className="absolute bottom-[10%] right-[5%] w-[70vw] h-[70vw] bg-teal-600/15 rounded-full blur-[160px]" 
-          />
-          
-          {/* Analysis Stars */}
-          {synastryStars.map((star) => (
-            <motion.div
-              key={`ana-star-${star.id}`}
-              initial={{ 
-                  opacity: star.initialOpacity, 
-                  top: star.top, 
-                  left: star.left,
-                  scale: star.scale
-              }}
-              animate={{ 
-                  opacity: star.animateOpacity,
-                  scale: star.animateScale
-              }}
-              transition={{ 
-                  duration: Math.max(star.duration, 5), 
-                  repeat: Infinity, 
-                  ease: "linear",
-                  delay: star.delay 
-              }}
-              className="absolute bg-white rounded-full shadow-[0_0_8px_2px_rgba(52,211,153,0.4)]"
-              style={{ width: `${star.size}px`, height: `${star.size}px` }}
-            />
-          ))}
-        </div>
-      )}
+      {mode === 'analysis' && <AnalysisBackground stars={synastryStars} />}
     </Layout>
   );
 }

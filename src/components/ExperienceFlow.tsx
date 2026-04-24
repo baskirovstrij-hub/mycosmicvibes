@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, memo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Space as Cosmic, Calendar, Globe, Send, Brain, User, RefreshCcw, Star, Zap, ChevronDown, Heart, Activity, Briefcase, Compass, Aperture, Sparkles, Orbit, ChevronUp } from 'lucide-react';
 import CityPicker from './CityPicker';
@@ -185,6 +185,96 @@ const CATEGORIES_LABELS: Record<string, string> = {
   Health: 'Здоровье', Spirituality: 'Дух', Destiny: 'Судьба'
 };
 
+const ResultBackgroundGlows = memo(({ natalData }: { natalData: any }) => {
+  const shootingStars = useMemo(() => Array.from({ length: 40 }).map(() => ({
+    top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, scale: Math.random() * 0.4 + 0.1,
+    duration: Math.random() * 10 + 10, delay: Math.random() * 2
+  })), []);
+  
+  const bgStars = useMemo(() => Array.from({ length: 30 }).map(() => ({
+    top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, scale: Math.random() * 0.3 + 0.3,
+    duration: Math.random() * 5 + 5, delay: Math.random() * 1.5
+  })), []);
+
+  return (
+    <div className="fixed top-0 left-0 w-full h-[100svh] pointer-events-none z-0 overflow-hidden opacity-80">
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-black z-0" />
+      
+      <div className="absolute top-[20%] left-[10%] w-[40vw] h-[40vw] bg-purple-900/40 rounded-full blur-[100px] mix-blend-screen z-0" />
+      <div className="absolute top-[60%] right-[10%] w-[50vw] h-[50vw] bg-indigo-900/30 rounded-full blur-[120px] mix-blend-screen z-0" />
+      <div className="absolute top-[80%] left-[30%] w-[30vw] h-[30vw] bg-gold/10 rounded-full blur-[90px] mix-blend-screen z-0" />
+      <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[90vw] h-[90vw] bg-purple-600/20 rounded-full blur-[120px] mix-blend-screen z-0" />
+      <div className="absolute top-[30%] right-[20%] w-[25vw] h-[25vw] bg-purple-500/15 rounded-full blur-[100px] mix-blend-screen z-0" />
+
+      <motion.div 
+        animate={{ scale: [1, 1.15, 1], opacity: [0.1, 0.2, 0.1] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] md:w-[60vh] md:h-[60vh] bg-purple-600/30 rounded-full blur-[120px] mix-blend-screen z-0" 
+      />
+
+      <div className="absolute left-1/2 top-[8%] -translate-x-1/2 flex items-center justify-center mix-blend-screen opacity-70 z-10 overflow-visible pointer-events-none rounded-full">
+          <div className="w-[85vw] h-[85vw] md:w-[60vh] md:h-[60vh] flex items-center justify-center">
+              <InteractiveZodiac data={natalData} />
+          </div>
+      </div>
+      
+      {shootingStars.map((star, i) => (
+         <motion.div
+           key={`star-${i}`}
+           initial={{ opacity: 0, top: star.top, left: star.left, scale: star.scale }}
+           animate={{ y: [0, -200], opacity: [0, 0.5, 0] }}
+           transition={{ duration: star.duration, repeat: Infinity, ease: "linear", delay: star.delay }}
+           className="absolute w-[2px] h-[2px] bg-white rounded-full shadow-[0_0_10px_1px_rgba(255,255,255,0.5)] z-20"
+         />
+      ))}
+
+      {bgStars.map((star, i) => (
+         <motion.div
+           key={`glow-star-${i}`}
+           initial={{ opacity: 0, top: star.top, left: star.left, scale: star.scale }}
+           animate={{ opacity: [0, 0.4, 0], scale: [1, 1.2, 1] }}
+           transition={{ duration: star.duration, repeat: Infinity, ease: "easeInOut", delay: star.delay }}
+           className="absolute w-[3px] h-[3px] bg-white rounded-full blur-[1px] z-10"
+         />
+      ))}
+    </div>
+  );
+});
+
+const StaticCosmicStars = memo(({ stars, count, opacity, size }: { stars: any[], count: number, opacity: number, size: number }) => (
+  <motion.div 
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 1 }}
+    className="fixed top-0 left-0 w-full h-[100svh] z-0 pointer-events-none overflow-hidden"
+  >
+    {stars.slice(0, count).map((star, i) => (
+      <motion.div
+        key={`static-star-${i}`}
+        initial={{ 
+          opacity: star.opacityOffset * (opacity / 2), 
+          top: star.top, 
+          left: star.left,
+          scale: 0.8
+        }}
+        animate={{ 
+          opacity: [star.opacityOffset * 0.2, opacity, star.opacityOffset * 0.2],
+          scale: [0.8, star.scaleBase, 0.8],
+        }}
+        transition={{ 
+          duration: star.duration, 
+          repeat: Infinity, 
+          ease: "easeInOut",
+          delay: star.delay
+        }}
+        className="absolute bg-white rounded-full shadow-[0_0_12px_3px_rgba(255,255,255,0.7)]"
+        style={{ width: `${star.sizeOffset * size + 1.5}px`, height: `${star.sizeOffset * size + 1.5}px` }}
+      />
+    ))}
+  </motion.div>
+));
+
 export default function ExperienceFlow() {
   const { setNatalData, setMbtiData, setUserData, userData, natalData, mbtiResult } = useUserStore();
   const [showAllPlanets, setShowAllPlanets] = useState(false);
@@ -340,7 +430,7 @@ export default function ExperienceFlow() {
   }, [natalData]);
 
   const cosmicStars = useMemo(() => {
-    return Array.from({ length: 200 }).map(() => ({
+    return Array.from({ length: 60 }).map(() => ({
       top: `${Math.random() * 100}%`,
       left: `${Math.random() * 100}%`,
       scaleBase: Math.random() * 0.8 + 0.8,
@@ -356,37 +446,12 @@ export default function ExperienceFlow() {
       
       <AnimatePresence>
         {(step === 'intro' || step === 'mbti' || step === 'birth') && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1 }}
-            className="fixed top-0 left-0 w-full h-[100svh] z-0 pointer-events-none overflow-hidden"
-          >
-             {cosmicStars.slice(0, starConfig.count).map((star, i) => (
-               <motion.div
-                 key={`static-star-${i}`}
-                 initial={{ 
-                    opacity: star.opacityOffset * (starConfig.opacity / 2), 
-                    top: star.top, 
-                    left: star.left,
-                    scale: 0.8
-                 }}
-                 animate={{ 
-                    opacity: [star.opacityOffset * 0.2, starConfig.opacity, star.opacityOffset * 0.2],
-                    scale: [0.8, star.scaleBase, 0.8],
-                 }}
-                 transition={{ 
-                    duration: star.duration, 
-                    repeat: Infinity, 
-                    ease: "easeInOut",
-                    delay: star.delay
-                 }}
-                 className="absolute bg-white rounded-full shadow-[0_0_12px_3px_rgba(255,255,255,0.7)]"
-                 style={{ width: `${star.sizeOffset * starConfig.size + 1.5}px`, height: `${star.sizeOffset * starConfig.size + 1.5}px` }}
-               />
-             ))}
-          </motion.div>
+          <StaticCosmicStars 
+            stars={cosmicStars} 
+            count={starConfig.count} 
+            opacity={starConfig.opacity} 
+            size={starConfig.size} 
+          />
         )}
       </AnimatePresence>
 
@@ -548,82 +613,7 @@ export default function ExperienceFlow() {
             animate={{ opacity: 1 }}
             className="w-full relative pb-10"
           >
-             <div className="fixed top-0 left-0 w-full h-[100svh] pointer-events-none z-0 overflow-hidden opacity-80">
-                <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-black z-0" />
-                
-                <div className="absolute top-[20%] left-[10%] w-[40vw] h-[40vw] bg-purple-900/40 rounded-full blur-[100px] mix-blend-screen z-0" />
-                <div className="absolute top-[60%] right-[10%] w-[50vw] h-[50vw] bg-indigo-900/30 rounded-full blur-[120px] mix-blend-screen z-0" />
-                <div className="absolute top-[80%] left-[30%] w-[30vw] h-[30vw] bg-gold/10 rounded-full blur-[90px] mix-blend-screen z-0" />
-                <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[90vw] h-[90vw] bg-purple-600/20 rounded-full blur-[120px] mix-blend-screen z-0" />
-                <div className="absolute top-[30%] right-[20%] w-[25vw] h-[25vw] bg-purple-500/15 rounded-full blur-[100px] mix-blend-screen z-0" />
-
-                <motion.div 
-                  animate={{ 
-                    scale: [1, 1.15, 1],
-                    opacity: [0.1, 0.2, 0.1],
-                  }}
-                  transition={{ 
-                    duration: 10, 
-                    repeat: Infinity, 
-                    ease: "easeInOut" 
-                  }}
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] md:w-[60vh] md:h-[60vh] bg-purple-600/30 rounded-full blur-[120px] mix-blend-screen z-0" 
-                />
-
-                <div 
-                  className="absolute left-1/2 top-[8%] -translate-x-1/2 flex items-center justify-center mix-blend-screen opacity-70 z-10 overflow-visible pointer-events-none rounded-full"
-                >
-                    <div className="w-[85vw] h-[85vw] md:w-[60vh] md:h-[60vh] flex items-center justify-center">
-                        <InteractiveZodiac data={natalData} />
-                    </div>
-                </div>
-                
-                {Array.from({ length: 150 }).map((_, i) => (
-                   <motion.div
-                     key={`star-${i}`}
-                     initial={{ 
-                        opacity: 0, 
-                        top: `${Math.random() * 100}%`, 
-                        left: `${Math.random() * 100}%`,
-                        scale: Math.random() * 0.4 + 0.1
-                     }}
-                     animate={{ 
-                        y: [0, -200], 
-                        opacity: [0, 0.5, 0]
-                     }}
-                     transition={{ 
-                        duration: Math.random() * 10 + 10, 
-                        repeat: Infinity, 
-                        ease: "linear",
-                        delay: Math.random() * 2 
-                     }}
-                     className="absolute w-[2px] h-[2px] bg-white rounded-full shadow-[0_0_10px_1px_rgba(255,255,255,0.5)] z-20"
-                   />
-                ))}
-
-                {Array.from({ length: 100 }).map((_, i) => (
-                   <motion.div
-                     key={`glow-star-${i}`}
-                     initial={{ 
-                        opacity: 0, 
-                        top: `${Math.random() * 100}%`, 
-                        left: `${Math.random() * 100}%`,
-                        scale: Math.random() * 0.3 + 0.3
-                     }}
-                     animate={{ 
-                        opacity: [0, 0.4, 0],
-                        scale: [1, 1.2, 1]
-                     }}
-                     transition={{ 
-                        duration: Math.random() * 5 + 5, 
-                        repeat: Infinity, 
-                        ease: "easeInOut",
-                        delay: Math.random() * 1.5 
-                     }}
-                     className="absolute w-[3px] h-[3px] bg-white rounded-full blur-[1px] z-10"
-                   />
-                ))}
-             </div>
+             <ResultBackgroundGlows natalData={natalData} />
 
              <div className="relative z-10 w-full max-w-4xl mx-auto px-6 md:px-0">
                 <div className="space-y-12 md:space-y-16">
