@@ -79,7 +79,7 @@ export default function BirthForm({ onSubmit, loading, isPartner, showMbti, init
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         onSubmit={handleSubmit}
-        className={`w-full max-w-xl mx-auto space-y-4 md:space-y-6 ${transparentBackground ? '' : 'sm:bg-white/[0.05] p-4 md:p-8 rounded-[1.5rem] md:rounded-[3rem] border-white/5 sm:backdrop-blur-sm transition-all gpu-accelerate'}`}
+        className={`w-full max-w-xl mx-auto space-y-4 md:space-y-6 ${transparentBackground ? '' : 'sm:bg-white/[0.03] p-4 md:p-8 rounded-[1.5rem] md:rounded-[3rem] border-white/5 transition-all'}`}
       >
         <div className="space-y-3 md:space-y-4">
           <div className="space-y-1.5 md:space-y-2 text-left">

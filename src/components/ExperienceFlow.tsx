@@ -10,7 +10,6 @@ import InteractiveZodiac from './InteractiveZodiac';
 import { calculateNatalData } from '../services/astrologyService';
 import { mapNatalDataToInterpretations } from '../services/interpretationService';
 import { getEnergySynthesis } from '../services/synthesisService';
-import AuraShare from './AuraShare';
 
 interface Question {
   id: number;
@@ -137,6 +136,10 @@ const CelestialStructureTile = ({ planet, interpretations }: { planet: any, inte
   );
 };
 
+const PLANET_ORDER = [
+  'Sun', 'Moon', 'Ascendant', 'MC', 'IC', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto', 'Descendant'
+];
+
 const SIGN_LABELS_PREP: Record<string, string> = {
   Aries: 'Овне', Taurus: 'Тельце', Gemini: 'Близнецах', Cancer: 'Раке', 
   Leo: 'Льве', Virgo: 'Деве', Libra: 'Весах', Scorpio: 'Скорпионе', 
@@ -197,19 +200,19 @@ const ResultBackgroundGlows = memo(({ natalData }: { natalData: any }) => {
   })), []);
 
   return (
-    <div className="fixed top-0 left-0 w-full h-[100svh] pointer-events-none z-0 overflow-hidden opacity-80 gpu-accelerate">
+    <div className="fixed top-0 left-0 w-full h-[100svh] pointer-events-none z-0 overflow-hidden opacity-80">
       <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-black z-0" />
       
-      <div className="absolute top-[20%] left-[10%] w-[40vw] h-[40vw] bg-purple-900/40 rounded-full blur-[100px] mix-blend-screen z-0 gpu-accelerate overflow-visible" />
-      <div className="absolute top-[60%] right-[10%] w-[50vw] h-[50vw] bg-indigo-900/30 rounded-full blur-[120px] mix-blend-screen z-0 gpu-accelerate overflow-visible" />
-      <div className="absolute top-[80%] left-[30%] w-[30vw] h-[30vw] bg-gold/10 rounded-full blur-[90px] mix-blend-screen z-0 gpu-accelerate overflow-visible" />
-      <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[90vw] h-[90vw] bg-purple-600/20 rounded-full blur-[120px] mix-blend-screen z-0 gpu-accelerate overflow-visible" />
-      <div className="absolute top-[30%] right-[20%] w-[25vw] h-[25vw] bg-purple-500/15 rounded-full blur-[100px] mix-blend-screen z-0 gpu-accelerate overflow-visible" />
+      <div className="absolute top-[20%] left-[10%] w-[40vw] h-[40vw] bg-purple-900/40 rounded-full blur-[100px] mix-blend-screen z-0" />
+      <div className="absolute top-[60%] right-[10%] w-[50vw] h-[50vw] bg-indigo-900/30 rounded-full blur-[120px] mix-blend-screen z-0" />
+      <div className="absolute top-[80%] left-[30%] w-[30vw] h-[30vw] bg-gold/10 rounded-full blur-[90px] mix-blend-screen z-0" />
+      <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[90vw] h-[90vw] bg-purple-600/20 rounded-full blur-[120px] mix-blend-screen z-0" />
+      <div className="absolute top-[30%] right-[20%] w-[25vw] h-[25vw] bg-purple-500/15 rounded-full blur-[100px] mix-blend-screen z-0" />
 
       <motion.div 
         animate={{ scale: [1, 1.15, 1], opacity: [0.1, 0.2, 0.1] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] md:w-[60vh] md:h-[60vh] bg-purple-600/30 rounded-full blur-[120px] mix-blend-screen z-0 gpu-accelerate overflow-visible" 
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] md:w-[60vh] md:h-[60vh] bg-purple-600/30 rounded-full blur-[120px] mix-blend-screen z-0" 
       />
 
       <div className="absolute left-1/2 top-[8%] -translate-x-1/2 flex items-center justify-center mix-blend-screen opacity-70 z-10 overflow-visible pointer-events-none rounded-full">
@@ -404,10 +407,10 @@ export default function ExperienceFlow() {
   };
 
   const getStarsConfig = (currentStep: string) => {
-    if (currentStep === 'intro') return { count: 200, opacity: 0.3, size: 1.2 };
-    if (currentStep === 'mbti') return { count: 200, opacity: 0.6, size: 1.8 };
-    if (currentStep === 'birth') return { count: 200, opacity: 0.9, size: 2.2 };
-    return { count: 200, opacity: 0, size: 0 };
+    if (currentStep === 'intro') return { count: 100, opacity: 0.3, size: 1.2 };
+    if (currentStep === 'mbti') return { count: 100, opacity: 0.6, size: 1.8 };
+    if (currentStep === 'birth') return { count: 100, opacity: 0.8, size: 2.0 };
+    return { count: 100, opacity: 0, size: 0 };
   };
   const starConfig = getStarsConfig(step);
 
@@ -430,12 +433,12 @@ export default function ExperienceFlow() {
   }, [natalData]);
 
   const cosmicStars = useMemo(() => {
-    return Array.from({ length: 60 }).map(() => ({
+    return Array.from({ length: 40 }).map(() => ({
       top: `${Math.random() * 100}%`,
       left: `${Math.random() * 100}%`,
-      scaleBase: Math.random() * 0.8 + 0.8,
-      duration: Math.random() * 5 + 4,
-      delay: Math.random() * 0.5,
+      scaleBase: Math.random() * 0.6 + 0.7,
+      duration: Math.random() * 8 + 5,
+      delay: Math.random() * 2,
       sizeOffset: Math.random(),
       opacityOffset: Math.random()
     }));
@@ -506,7 +509,7 @@ export default function ExperienceFlow() {
               <p className="text-gray-500 text-sm font-light">Нам нужны данные вашего рождения для расчета натальной карты.</p>
             </div>
             
-            <div className="space-y-4 md:p-10 py-8 px-4 rounded-[3rem] sm:bg-white/[0.05] sm:border border-white/5 sm:backdrop-blur-lg transition-all gpu-accelerate">
+            <div className="space-y-4 md:p-10 py-8 px-4 rounded-[3rem] sm:bg-white/[0.02] sm:border border-white/5 sm:backdrop-blur-3xl transition-all">
               <div className="space-y-8">
                 <div className="space-y-4">
                   <label className="text-[10px] font-medium text-gray-400 uppercase tracking-[0.3em] ml-1 flex items-center gap-2">
@@ -615,7 +618,7 @@ export default function ExperienceFlow() {
           >
              <ResultBackgroundGlows natalData={natalData} />
 
-             <div className="relative z-10 w-full max-w-4xl mx-auto px-6 md:px-0">
+             <div className="relative z-10 w-full max-w-4xl mx-auto px-4 md:px-0">
                 <div className="space-y-12 md:space-y-16">
                     
                      <div className="relative space-y-6 mt-8 md:mt-0">
@@ -644,9 +647,9 @@ export default function ExperienceFlow() {
                               <div className="pl-6 border-l-2 border-purple-500/40 text-gray-300 text-sm md:text-base font-light leading-relaxed max-w-2xl bg-gradient-to-r from-purple-900/10 to-transparent py-2 text-justify">
                                  <span className="flex items-center gap-2 text-[9px] text-purple-300 uppercase tracking-widest mb-3">
                                     <Sparkles size={10} className="text-gold" />
-                                    <span>Энергия дня: <span className="text-gold font-medium">{natalData.horoscope.vibe}</span></span>
+                                    <span>Энергия дня: <span className="text-gold font-medium">{natalData.horoscope.vibe.toLowerCase().replace(/^\w/, c => c.toUpperCase())}</span></span>
                                  </span>
-                                 "{natalData.horoscope.text}"
+                                 "{natalData.horoscope.text.toLowerCase().replace(/^\s*\w/, c => c.toUpperCase())}"
                               </div>
                            </motion.div>
                         )}
@@ -654,37 +657,40 @@ export default function ExperienceFlow() {
 
                     <div className="flex flex-col items-center space-y-16 pt-5 pb-12 border-t border-white/10">
                         <div className="w-full space-y-12">
-                           <div className="space-y-4 max-w-3xl text-left px-4">
-                              <h4 className="text-xl md:text-[22px] font-light text-white flex items-center justify-start gap-2 uppercase tracking-[0.4em]">
-                                 <Compass size={20} className="text-gold" /> Небесная структура
+                           <div className="space-y-4 max-w-3xl text-left px-4 w-full self-start">
+                              <h4 className="text-xl md:text-[22px] font-light text-white flex items-center justify-start gap-2 uppercase tracking-[0.4em] text-left">
+                                 <Compass size={20} className="text-gold hidden md:block" /> Небесная структура
                               </h4>
-                              <p className="text-gray-400 text-sm md:text-base leading-relaxed font-light text-justify">
-                                 Ваша астральная архитектура определяет фундаментальные настройки личности и паттерны взаимодействия с миром.
+                              <p className="text-gray-400 text-sm md:text-base leading-relaxed font-light text-left max-w-2xl">
+                                 Ваша астральная архитектура — это фундаментальный чертеж духа, определяющий тончайшие настройки личности, врожденные таланты и кармические паттерны взаимодействия с макрокосмосом. Это живая карта вашего предназначения, где каждое положение планет открывает уникальный портал к реализации вашего высшего потенциала.
                               </p>
                            </div>
                            
                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2 w-full max-w-full overflow-hidden">
-                               {(showAllPlanets 
-                                 ? [...natalData.planets, ...displayPoints] 
-                                 : [
-                                     ...(natalData.planets || []).slice(0, 2),
-                                     ...displayPoints.find(p => p.name === 'Ascendant') ? [displayPoints.find(p => p.name === 'Ascendant')] : (natalData.planets || []).slice(2, 3)
-                                   ]
-                               ).map((planet: any) => (
-                                  <CelestialStructureTile 
-                                    key={planet.name} 
-                                    planet={planet} 
-                                    interpretations={natalData.interpretations || []} 
-                                  />
-                               ))}
+                                 {(() => {
+                                    const allPoints = [...(natalData.planets || []), ...displayPoints];
+                                    const uniquePoints = allPoints.filter((v, i, a) => a.findIndex(t => (t.name === v.name)) === i);
+                                    const sortedPoints = uniquePoints.sort((a, b) => {
+                                       const idxA = PLANET_ORDER.indexOf(a.name);
+                                       const idxB = PLANET_ORDER.indexOf(b.name);
+                                       return (idxA > -1 ? idxA : 999) - (idxB > -1 ? idxB : 999);
+                                    });
+                                    return (showAllPlanets ? sortedPoints : sortedPoints.slice(0, 3)).map((planet: any) => (
+                                       <CelestialStructureTile 
+                                         key={planet.name} 
+                                         planet={planet} 
+                                         interpretations={natalData.interpretations || []} 
+                                       />
+                                    ));
+                                 })()}
                            </div>
 
                            {!showAllPlanets && (natalData.planets.length + displayPoints.length) > 3 && (
                              <motion.button
-                               initial={{ opacity: 0 }}
-                               animate={{ opacity: 1 }}
-                               onClick={() => setShowAllPlanets(true)}
-                               className="mt-6 mx-auto flex flex-col items-center gap-2 group transition-all"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                onClick={() => setShowAllPlanets(true)}
+                                className="mt-6 mx-auto flex flex-col items-center gap-2 group transition-all"
                              >
                                <span className="text-[10px] uppercase tracking-[0.3em] text-white/40 group-hover:text-gold transition-colors">Показать все планеты</span>
                                <ChevronDown className="text-white/20 group-hover:text-gold group-hover:translate-y-1 transition-all" size={20} />
@@ -693,10 +699,10 @@ export default function ExperienceFlow() {
 
                            {showAllPlanets && (
                              <motion.button
-                               initial={{ opacity: 0 }}
-                               animate={{ opacity: 1 }}
-                               onClick={() => setShowAllPlanets(false)}
-                               className="mt-8 mx-auto flex flex-col items-center gap-2 group transition-all"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                onClick={() => setShowAllPlanets(false)}
+                                className="mt-8 mx-auto flex flex-col items-center gap-2 group transition-all"
                              >
                                <ChevronUp className="text-white/20 group-hover:text-gold group-hover:-translate-y-1 transition-all" size={20} />
                                <span className="text-[10px] uppercase tracking-[0.3em] text-white/40 group-hover:text-gold transition-colors">Свернуть</span>
@@ -704,30 +710,30 @@ export default function ExperienceFlow() {
                            )}
                         </div>
 
-                        <div className="w-full max-w-3xl mx-auto space-y-8 bg-gradient-to-br from-purple-900/10 to-transparent p-8 md:p-12 rounded-[3rem] border border-white/5 backdrop-blur-sm relative overflow-hidden flex flex-col items-center text-center">
+                        <div className="w-full max-w-3xl mx-auto space-y-8 bg-gradient-to-br from-purple-900/10 to-transparent px-4 py-10 md:p-12 rounded-[3rem] border border-white/5 backdrop-blur-sm relative overflow-hidden flex flex-col items-center text-center">
                            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 blur-[100px] rounded-full mix-blend-screen" />
                            <h3 className="text-xs md:text-sm font-medium text-purple-500 uppercase tracking-[0.5em] flex items-center gap-2 mb-2">
                               <Brain size={16} /> Психо-архетип
                            </h3>
                            <div className="text-7xl md:text-[6.5rem] font-medium text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-indigo-500 tracking-tighter leading-none filter drop-shadow-lg mb-6">
-                              {mbtiResult}
+                               {mbtiResult}
                            </div>
-                           <div className="max-w-xl">
-                              <div className="text-lg md:text-xl font-medium text-white/90 uppercase tracking-[0.3em] mb-4">
+                           <div className="w-full">
+                              <div className="text-lg md:text-xl font-medium text-white/90 uppercase tracking-[0.3em] mb-4 text-center">
                                  {mbtiResult && MBTI_DESCRIPTIONS[mbtiResult]?.title}
                               </div>
-                              <p className="text-gray-400 text-xs md:text-sm leading-relaxed font-light uppercase tracking-[0.15em] text-left">
+                              <p className="text-gray-400 text-[13px] md:text-sm leading-relaxed font-light tracking-[0.08em] text-center">
                                  {mbtiResult && MBTI_DESCRIPTIONS[mbtiResult]?.desc}
                               </p>
                            </div>
                         </div>
                     </div>
 
-                   <div className="max-w-4xl space-y-8 pt-10 md:pt-16 pb-10 border-y border-white/5">
+                   <div className="max-w-4xl space-y-8 pt-10 md:pt-16 pb-10 border-y border-white/5 w-full">
                        <div className="space-y-6 pt-0">
-                          <h3 className="text-sm md:text-base font-light text-white uppercase tracking-[0.3em] md:tracking-[0.8em] text-left">Синтез Энергий</h3>
-                          <div className="text-lg md:text-2xl text-gray-300 leading-relaxed font-light text-justify">
-                             <p className="max-w-3xl">
+                          <h3 className="text-xl md:text-3xl font-light text-white uppercase tracking-[0.4em] md:tracking-[0.8em] text-left">Синтез Энергий</h3>
+                          <div className="text-lg md:text-2xl text-gray-300 leading-relaxed font-light text-left">
+                             <p className="w-full">
                                 {getEnergySynthesis(natalData.planets[0].sign, mbtiResult || '')}
                              </p>
                           </div>
@@ -804,23 +810,17 @@ export default function ExperienceFlow() {
                       })}
                    </div>
 
-                   <div className="pt-20 flex flex-col items-center gap-8 justify-center pb-20">
-                      <AuraShare 
-                        userName={natalData.name} 
-                        sunSign={SIGN_LABELS[natalData.planets[0].sign]} 
-                        mbti={mbtiResult || ''} 
-                      />
-                      
-                      <button 
-                        onClick={resetAll}
-                        className="px-10 py-4 bg-white/[0.05] border border-white/10 text-white font-light rounded-full hover:bg-white/10 transition-all uppercase tracking-[0.5em] text-[11px] flex items-center justify-center gap-4 mt-8"
-                      >
-                         <RefreshCcw size={12} /> Обновить Путь
-                      </button>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
+                   <div className="pt-20 flex flex-col items-center gap-8 justify-center">
+                       <button 
+                         onClick={resetAll}
+                         className="px-10 py-4 bg-white/[0.05] border border-white/10 text-white font-light rounded-full hover:bg-white/10 transition-all uppercase tracking-[0.5em] text-[11px] flex items-center justify-center gap-4"
+                       >
+                          <RefreshCcw size={12} /> Обновить Путь
+                       </button>
+                    </div>
+                 </div>
+              </div>
+           </motion.div>
         )}
         </AnimatePresence>
       </div>

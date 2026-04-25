@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, Variants } from 'motion/react';
-import { Heart, Home, Zap, Smile, Brain, Flame, Sparkles, Star, User, Compass } from 'lucide-react';
+import { Heart, Home, Zap, Smile, Brain, Flame, Sparkles, Star, User, Compass, ChevronDown } from 'lucide-react';
 import Markdown from 'react-markdown';
-import SynastryShare from './SynastryShare';
 
 const ARCHITECTURE_DEFS: Record<string, string> = {
   'passion': 'Огонь, влечение и искра между вами',
@@ -29,17 +28,17 @@ const CustomAstroRadar = ({ data }: { data: any[] }) => {
   const gridLevels = [0.33, 0.66, 1.0];
   
   return (
-     <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-auto max-h-[70vh] aspect-square overflow-visible drop-shadow-[0_0_25px_rgba(168,85,247,0.15)]">
+     <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-auto max-h-[70vh] aspect-square overflow-visible drop-shadow-[0_0_25px_rgba(239,68,68,0.15)]">
         <defs>
            <linearGradient id="radarFill" x1="0" y1="0" x2="1" y2="1">
-             <stop offset="0%" stopColor="#ba76ff" stopOpacity="0.3" />
-             <stop offset="50%" stopColor="#a855f7" stopOpacity="0.1" />
-             <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.3" />
+             <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+             <stop offset="50%" stopColor="#f43f5e" stopOpacity="0.1" />
+             <stop offset="100%" stopColor="#991b1b" stopOpacity="0.3" />
            </linearGradient>
            <linearGradient id="radarStroke" x1="0" y1="0" x2="1" y2="1">
-             <stop offset="0%" stopColor="#ba76ff" />
-             <stop offset="50%" stopColor="#a855f7" />
-             <stop offset="100%" stopColor="#60a5fa" />
+             <stop offset="0%" stopColor="#ef4444" />
+             <stop offset="50%" stopColor="#f43f5e" />
+             <stop offset="100%" stopColor="#b91c1c" />
            </linearGradient>
         </defs>
         {/* Axes */}
@@ -62,7 +61,7 @@ const CustomAstroRadar = ({ data }: { data: any[] }) => {
           fill="url(#radarFill)" 
           stroke="url(#radarStroke)" 
           strokeWidth="2" 
-          className="filter drop-shadow-[0_0_12px_rgba(186,118,255,0.4)]"
+          className="filter drop-shadow-[0_0_12px_rgba(239,68,68,0.4)]"
         />
 
         {/* Labels */}
@@ -153,9 +152,10 @@ interface SynastryResultProps {
   };
   u1Traits: Traits;
   u2Traits: Traits;
+  onReset: () => void;
 }
 
-export default function SynastryResult({ score, details, u1Traits, u2Traits }: SynastryResultProps) {
+export default function SynastryResult({ score, details, u1Traits, u2Traits, onReset }: SynastryResultProps) {
   const [animatedScore, setAnimatedScore] = useState(0);
 
   useEffect(() => {
@@ -210,15 +210,15 @@ export default function SynastryResult({ score, details, u1Traits, u2Traits }: S
       variants={containerVariants} 
       initial="hidden" 
       animate="visible" 
-      className="w-full max-w-6xl mx-auto p-4 md:p-6 relative space-y-24"
+      className="w-full max-w-6xl mx-auto px-4 py-4 md:p-6 relative space-y-24"
     >
       {/* Header & Score Group */}
-      <motion.div variants={itemVariants} className="flex flex-col items-center">
+      <motion.div variants={itemVariants} className="flex flex-col items-center justify-center min-h-[85vh] md:min-h-0 pt-0 md:pt-12">
         <div className="relative z-10 text-center pt-[30px] mb-8">
-          <h3 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 uppercase tracking-tighter mb-[8px]">
+          <h3 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-red-500 uppercase tracking-tighter mb-[8px]">
             Космический Резонанс
           </h3>
-          <p className="text-purple-500 font-medium tracking-[0.2em] md:tracking-[0.4em] uppercase text-[11px] opacity-90 max-w-xl mx-auto leading-relaxed">
+          <p className="text-red-500 font-medium tracking-[0.2em] md:tracking-[0.4em] uppercase text-[11px] opacity-90 w-full mx-auto leading-relaxed px-4">
             {getVerdict(score)}
           </p>
         </div>
@@ -238,7 +238,7 @@ export default function SynastryResult({ score, details, u1Traits, u2Traits }: S
                   cx="50"
                   cy="50"
                   r="45"
-                  className="stroke-purple-500 fill-none transition-all duration-[2000ms] ease-out"
+                  className="stroke-red-500 fill-none transition-all duration-[2000ms] ease-out"
                   strokeWidth="2.5"
                   pathLength="100"
                   strokeDasharray="100 100"
@@ -252,19 +252,37 @@ export default function SynastryResult({ score, details, u1Traits, u2Traits }: S
               <span className="text-6xl md:text-7xl font-light text-white tracking-tighter">
                 {score}
               </span>
-              <span className="text-purple-500/50 font-light text-[9px] md:text-[11px] tracking-[0.4em] uppercase mt-1">
+              <span className="text-red-500/50 font-light text-[9px] md:text-[11px] tracking-[0.4em] uppercase mt-1">
                 совместимость
               </span>
             </div>
           </div>
+          
+          {/* Scroll Down Hint (Mobile Only) */}
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: [0, 1, 0.5], y: [0, 10, 0] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            className="md:hidden mt-8 cursor-pointer flex flex-col items-center gap-2"
+            onClick={() => {
+              const detailsEl = document.getElementById('synastry-details');
+              detailsEl?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            <ChevronDown size={32} className="text-red-500/50" strokeWidth={1} />
+          </motion.div>
         </div>
       </motion.div>
 
       {/* Comparison Grid */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl mx-auto px-4">
+      <motion.div 
+        id="synastry-details"
+        variants={itemVariants} 
+        className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl mx-auto px-4"
+      >
         <div className="p-6 md:p-8 rounded-[2rem] relative overflow-hidden group border border-white/5 bg-white/[0.01]">
           <h4 className="text-xl md:text-2xl font-light text-white mb-6 flex items-center gap-3 uppercase tracking-widest">
-            <User size={20} className="text-purple-500" />
+            <User size={20} className="text-red-500" />
             {u1Traits.name}
           </h4>
           <div className="space-y-4 relative z-10 text-sm md:text-base">
@@ -273,7 +291,7 @@ export default function SynastryResult({ score, details, u1Traits, u2Traits }: S
               { label: 'Луна (Душа)', value: u1Traits.moon, color: 'text-sky-500/90' },
               { label: 'Венера (Любовь)', value: u1Traits.venus, color: 'text-rose-500/90' },
               { label: 'Марс (Воля)', value: u1Traits.mars, color: 'text-red-500/90' },
-              { label: 'Архетип (MBTI)', value: u1Traits.mbti, color: 'text-purple-500/90' },
+              { label: 'Архетип (MBTI)', value: u1Traits.mbti, color: 'text-red-500/90' },
             ].map(row => (
               <div key={row.label} className="flex justify-between items-center border-b border-white/5 pb-3">
                 <span className="text-gray-400 uppercase tracking-widest font-light text-[10px]">{row.label}</span>
@@ -286,7 +304,7 @@ export default function SynastryResult({ score, details, u1Traits, u2Traits }: S
         <div className="p-6 md:p-8 rounded-[2rem] relative overflow-hidden group border border-white/5 bg-white/[0.01]">
           <h4 className="text-xl md:text-2xl font-light text-white mb-6 flex items-center justify-end gap-3 uppercase tracking-widest">
             {u2Traits.name}
-            <User size={20} className="text-purple-500" />
+            <User size={20} className="text-red-500" />
           </h4>
           <div className="space-y-4 relative z-10 text-sm md:text-base">
             {[
@@ -294,7 +312,7 @@ export default function SynastryResult({ score, details, u1Traits, u2Traits }: S
               { label: 'Луна (Душа)', value: u2Traits.moon, color: 'text-sky-500/90' },
               { label: 'Венера (Любовь)', value: u2Traits.venus, color: 'text-rose-500/90' },
               { label: 'Марс (Воля)', value: u2Traits.mars, color: 'text-red-500/90' },
-              { label: 'Архетип (MBTI)', value: u2Traits.mbti, color: 'text-purple-500/90' },
+              { label: 'Архетип (MBTI)', value: u2Traits.mbti, color: 'text-red-500/90' },
             ].map(row => (
               <div key={row.label} className="flex justify-between items-center border-b border-white/5 pb-3">
                 <span className={`${row.color} font-light`}>{row.value || '—'}</span>
@@ -312,7 +330,7 @@ export default function SynastryResult({ score, details, u1Traits, u2Traits }: S
         </div>
 
         <div className="w-full space-y-12">
-          <div className="space-y-4 max-w-3xl mx-auto md:text-center px-4">
+          <div className="space-y-4 w-full md:max-w-3xl mx-auto md:text-center px-4">
             <h4 className="text-xl md:text-[22px] font-light text-white flex items-center md:justify-center gap-4 uppercase tracking-[0.4em]">
               Архитектура Связи
             </h4>
@@ -331,41 +349,48 @@ export default function SynastryResult({ score, details, u1Traits, u2Traits }: S
       </motion.div>
 
       {/* Detailed Analysis Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 w-full px-4 pt-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 w-full px-0 md:px-4 pt-10">
         {detailItems.map((item) => {
           const detail = details[item.key as keyof typeof details];
           return (
             <motion.div 
               key={`card-${item.key}`} 
               variants={itemVariants}
-              className="p-6 md:p-10 group relative flex flex-col h-full border-t border-white/5"
+              className="px-0 py-10 md:p-10 group relative flex flex-col h-full border-t border-white/5"
             >
-              <div className="flex flex-row items-center justify-center gap-4 md:gap-8 mb-8 md:mb-12 relative z-10 w-full flex-nowrap px-2">
-                <div className={`p-2.5 md:p-3 rounded-xl md:rounded-2xl border border-white/5 backdrop-blur-sm ${item.color} shrink-0`}>
-                  <item.icon size={24} />
+              <div className="grid grid-cols-[3rem_1fr_3.5rem] md:grid-cols-[4rem_1fr_5rem] items-center mb-8 md:mb-12 relative z-10 w-full px-4 md:px-0 gap-2">
+                {/* Left: Icon container */}
+                <div className="flex justify-start">
+                  <div className={`p-2 rounded-xl md:p-3 md:rounded-2xl border border-white/5 backdrop-blur-sm ${item.color} shrink-0`}>
+                    <item.icon size={18} className="md:w-6 md:h-6" />
+                  </div>
                 </div>
-                <h4 className="font-light text-[22px] md:text-[24px] uppercase tracking-[0.2em] text-white">
+                
+                {/* Center: Title strictly in the middle */}
+                <h4 className="text-center font-light text-[12px] xs:text-[13px] md:text-[16px] lg:text-[17px] uppercase tracking-[0.1em] md:tracking-[0.15em] text-white leading-tight">
                   {item.title}
                 </h4>
-                <div className="text-[26px] md:text-[30px] font-light text-white/30 shrink-0">
+
+                {/* Right: Score container */}
+                <div className="flex justify-end tabular-nums text-[15px] md:text-[22px] font-light text-white/30">
                   {detail.score}%
                 </div>
               </div>
               
-              <div className="space-y-8 relative z-10 flex-1 flex flex-col">
-                <div className="text-gray-400 text-sm md:text-base font-light leading-relaxed markdown-container flex-1 min-h-[200px]">
+              <div className="space-y-8 relative z-10 flex flex-col w-full px-4 md:px-0">
+                <div className="text-gray-400 text-sm md:text-base font-light leading-relaxed markdown-container w-full">
                   <Markdown components={{
-                     strong: ({node, ...props}) => <strong className="text-white font-medium block mt-6 mb-2 text-[11px] md:text-xs uppercase tracking-[0.1em] border-b border-white/10 pb-1" {...props} />,
-                     p: ({node, ...props}) => <p className="mb-4 last:mb-0 leading-relaxed" {...props} />
+                     strong: ({node, ...props}) => <strong className="text-white font-medium block mt-6 mb-2 text-[11px] md:text-xs uppercase tracking-[0.1em] border-b border-white/10 pb-1 w-full" {...props} />,
+                     p: ({node, ...props}) => <p className="mb-4 last:mb-0 leading-relaxed w-full" {...props} />
                   }}>
                     {detail.text}
                   </Markdown>
                 </div>
-                
+
                 {detail.tips && detail.tips.length > 0 && (
-                  <div className="pt-10 border-t border-white/10 space-y-6 mt-auto">
-                    <p className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.4em] text-purple-500 flex items-center gap-3">
-                       <Sparkles size={14} className="text-purple-500 opacity-80" />
+                  <div className="pt-8 mt-8 border-t border-white/10 space-y-6">
+                    <p className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.4em] text-red-500 flex items-center gap-3">
+                       <Sparkles size={14} className="text-red-500 opacity-80" />
                        Звездные Советы
                     </p>
                     <ul className="grid grid-cols-1 gap-5">
@@ -384,15 +409,14 @@ export default function SynastryResult({ score, details, u1Traits, u2Traits }: S
         })}
       </div>
 
-      <motion.div variants={itemVariants} className="w-full flex justify-center py-10 pb-20">
-        <SynastryShare 
-          score={score} 
-          u1Name={u1Traits.name} 
-          u2Name={u2Traits.name} 
-          details={details}
-          u1Traits={u1Traits}
-          u2Traits={u2Traits}
-        />
+      <motion.div variants={itemVariants} className="w-full flex justify-center py-20 pb-40">
+        <button 
+          onClick={onReset} 
+          className="flex items-center gap-2 px-10 py-4 rounded-full border border-white/20 hover:border-white/50 bg-white/5 hover:bg-white/10 transition-all uppercase tracking-[0.3em] text-[10px] md:text-xs font-medium text-white group"
+        >
+          <span className="group-hover:-translate-x-1 transition-transform">←</span>
+          Рассчитать заново
+        </button>
       </motion.div>
     </motion.div>
   );

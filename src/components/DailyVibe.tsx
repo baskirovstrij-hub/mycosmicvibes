@@ -49,14 +49,14 @@ export default function DailyVibe({ horoscope }: DailyVibeProps) {
           </div>
           <div>
             <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400">Гороскоп</h4>
-            <p className={`text-xl font-bold ${color}`}>{horoscope.vibe}</p>
+            <p className="text-xl font-bold text-gold">{horoscope.vibe.toLowerCase().replace(/^\w/, c => c.toUpperCase())}</p>
           </div>
         </div>
         <Sparkles className="text-gold/30" size={20} />
       </div>
       
-      <p className="text-gray-200 leading-relaxed text-lg italic">
-        "{horoscope.text}"
+      <p className="text-gray-200 leading-relaxed text-lg italic first-letter:uppercase">
+        "{horoscope.text.toLowerCase().replace(/^\s*\w/, c => c.toUpperCase())}"
       </p>
       
       <div className="pt-2 flex items-center gap-2 text-[10px] text-gray-500 uppercase tracking-tighter">

@@ -34,8 +34,8 @@ export default function AnalysisDashboard() {
   if (!natalData || !mbtiResult) {
     return (
       <div className="w-full flex flex-col items-center justify-center min-h-[50vh] space-y-6">
-         <div className="w-20 h-20 bg-purple-500/10 rounded-full flex items-center justify-center">
-            <Lock className="text-purple-500" size={32} />
+         <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center">
+            <Lock className="text-emerald-500" size={32} />
          </div>
          <div className="text-center space-y-2">
            <h2 className="text-xl md:text-3xl font-light text-white tracking-tight">Разбор недоступен</h2>
@@ -122,7 +122,7 @@ export default function AnalysisDashboard() {
                   Ядро Личности
                 </h3>
                 <h2 className="text-2xl md:text-4xl font-light tracking-[0.2em] uppercase text-white/95 mb-10 text-center md:text-left">
-                  {analysisData.core.title}
+                  {analysisData.core.title.replace(/^(Ядро|ЯДРО):\s*/i, '')}
                 </h2>
                 <div className="max-w-4xl w-full">
                   <p className="text-white/70 font-light leading-[1.9] text-base md:text-xl text-justify md:text-left">
@@ -139,10 +139,10 @@ export default function AnalysisDashboard() {
              viewport={{ once: true }}
              className="relative flex flex-col group w-full items-center md:items-start"
           >
-             <div className="absolute top-1/2 left-0 w-[60vw] h-[60vw] bg-purple-500/5 rounded-full blur-[120px] pointer-events-none" />
+             <div className="absolute top-1/2 left-0 w-[60vw] h-[60vw] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
              
              <div className="relative z-10 flex flex-col items-center md:items-start w-full">
-                <h3 className="text-purple-500/60 uppercase tracking-[0.5em] text-[10px] md:text-xs font-medium mb-6 text-center md:text-left">
+                <h3 className="text-emerald-500/60 uppercase tracking-[0.5em] text-[10px] md:text-xs font-medium mb-6 text-center md:text-left">
                    Скрытая Тень
                 </h3>
                 <h2 className="text-2xl md:text-4xl font-light tracking-[0.2em] uppercase text-white/95 mb-10 text-center md:text-left">

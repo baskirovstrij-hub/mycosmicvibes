@@ -39,11 +39,11 @@ export default function SynastryForm({ onCalculate, loading }: SynastryFormProps
           {step === 1 ? (
             <motion.div
               key="user1"
-              initial={{ opacity: 0, x: -30 }}
+              initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 30 }}
+              exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className="relative max-w-2xl mx-auto gpu-accelerate"
+              className="relative max-w-2xl mx-auto"
             >
               <div className="text-center mb-6 md:mb-8 px-1 relative z-10">
                 <h3 className="text-lg md:text-xl font-medium text-white tracking-[0.2em] uppercase mb-1">Ваши данные</h3>
@@ -61,11 +61,11 @@ export default function SynastryForm({ onCalculate, loading }: SynastryFormProps
           ) : (
             <motion.div
               key="user2"
-              initial={{ opacity: 0, x: 30 }}
+              initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -30 }}
+              exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className="relative max-w-2xl mx-auto gpu-accelerate"
+              className="relative max-w-2xl mx-auto"
             >
               <div className="text-center mb-6 md:mb-8 px-1 relative z-10">
                 <button 

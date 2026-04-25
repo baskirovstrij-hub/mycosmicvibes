@@ -40,7 +40,7 @@ export default function NatalResult({ userData, natalData, onRecalculate, onView
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-8">
-      <div className="relative p-8 rounded-[2.5rem] bg-black/40 border border-white/10 backdrop-blur-lg shadow-2xl overflow-hidden gpu-accelerate">
+      <div className="relative p-8 rounded-[2.5rem] bg-black/40 border border-white/10 backdrop-blur-2xl shadow-2xl overflow-hidden">
         {/* Background Glow */}
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-gold/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-neon-purple/10 rounded-full blur-3xl" />

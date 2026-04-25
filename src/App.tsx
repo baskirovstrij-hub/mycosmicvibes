@@ -18,17 +18,17 @@ import { useSynastryStore } from './store/synastryStore';
 type AppMode = 'home' | 'experience' | 'synastry' | 'profile' | 'analysis';
 
 const SynastryBackground = memo(({ stars }: { stars: any[] }) => (
-  <div className="fixed inset-0 z-[-10] pointer-events-none overflow-hidden gpu-accelerate">
+  <div className="fixed inset-0 z-[-10] pointer-events-none overflow-hidden">
     <div className="absolute inset-0 bg-red-950/20" />
     <motion.div 
       animate={{ opacity: [0.15, 0.25, 0.15], scale: [1, 1.05, 1] }}
       transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-      className="absolute top-[10%] left-[5%] w-[80vw] h-[80vw] bg-red-600/25 rounded-full blur-[180px] gpu-accelerate overflow-visible" 
+      className="absolute top-[10%] left-[5%] w-[80vw] h-[80vw] bg-red-600/25 rounded-full blur-[180px]" 
     />
     <motion.div 
       animate={{ opacity: [0.1, 0.2, 0.1], scale: [1, 1.03, 1] }}
       transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-      className="absolute bottom-[10%] right-[10%] w-[70vw] h-[70vw] bg-rose-600/20 rounded-full blur-[160px] gpu-accelerate overflow-visible" 
+      className="absolute bottom-[10%] right-[10%] w-[70vw] h-[70vw] bg-rose-600/20 rounded-full blur-[160px]" 
     />
     {stars.map((star) => (
       <motion.div
@@ -44,17 +44,17 @@ const SynastryBackground = memo(({ stars }: { stars: any[] }) => (
 ));
 
 const AnalysisBackground = memo(({ stars }: { stars: any[] }) => (
-  <div className="fixed inset-0 z-[-10] pointer-events-none overflow-hidden gpu-accelerate">
+  <div className="fixed inset-0 z-[-10] pointer-events-none overflow-hidden">
     <div className="absolute inset-0 bg-emerald-950/20" />
     <motion.div 
       animate={{ opacity: [0.1, 0.2, 0.1], scale: [1, 1.05, 1] }}
       transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-      className="absolute top-[10%] left-[15%] w-[80vw] h-[80vw] bg-emerald-600/20 rounded-full blur-[180px] gpu-accelerate overflow-visible" 
+      className="absolute top-[10%] left-[15%] w-[80vw] h-[80vw] bg-emerald-600/20 rounded-full blur-[180px]" 
     />
     <motion.div 
       animate={{ opacity: [0.1, 0.2, 0.1], scale: [1, 1.03, 1] }}
       transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-      className="absolute bottom-[10%] right-[5%] w-[70vw] h-[70vw] bg-teal-600/15 rounded-full blur-[160px] gpu-accelerate overflow-visible" 
+      className="absolute bottom-[10%] right-[5%] w-[70vw] h-[70vw] bg-teal-600/15 rounded-full blur-[160px]" 
     />
     {stars.map((star) => (
       <motion.div
@@ -107,17 +107,17 @@ export default function App() {
   };
 
   const synastryStars = useMemo(() => {
-    return Array.from({ length: 30 }).map((_, i) => ({
+    return Array.from({ length: 20 }).map((_, i) => ({
       id: i,
-      initialOpacity: Math.random() * 0.5 + 0.1,
+      initialOpacity: Math.random() * 0.4 + 0.1,
       top: `${Math.random() * 100}%`,
       left: `${Math.random() * 100}%`,
-      scale: Math.random() * 0.5 + 0.5,
-      animateOpacity: [Math.random() * 0.2, 0.8, Math.random() * 0.2],
-      animateScale: [0.8, 1.2, 0.8],
-      duration: Math.random() * 4 + 3,
-      delay: Math.random() * 2,
-      size: Math.random() * 2 + 1.5
+      scale: Math.random() * 0.4 + 0.5,
+      animateOpacity: [Math.random() * 0.2, 0.7, Math.random() * 0.2],
+      animateScale: [0.9, 1.1, 0.9],
+      duration: Math.random() * 6 + 4,
+      delay: Math.random() * 3,
+      size: Math.random() * 1.5 + 1
     }));
   }, []);
 
@@ -150,18 +150,16 @@ export default function App() {
                  ) : (
                    <div className="w-full flex justify-center pb-20 fade-in text-left">
                      <div className="w-full flex flex-col items-center">
-                       <SynastryResult score={synastryResult.score} details={synastryResult.details} u1Traits={synastryResult.u1Traits} u2Traits={synastryResult.u2Traits} />
-                       
-                       <button 
-                         onClick={() => {
-                           reset();
-                           document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
-                         }} 
-                         className="flex items-center gap-2 px-8 py-4 mt-16 rounded-full border border-white/20 hover:border-white/50 bg-white/5 hover:bg-white/10 transition-colors uppercase tracking-[0.2em] text-[10px] md:text-xs font-medium text-white group"
-                       >
-                         <span className="group-hover:-translate-x-1 transition-transform">←</span>
-                         Рассчитать заново
-                       </button>
+                        <SynastryResult 
+                          score={synastryResult.score} 
+                          details={synastryResult.details} 
+                          u1Traits={synastryResult.u1Traits} 
+                          u2Traits={synastryResult.u2Traits} 
+                          onReset={() => {
+                            reset();
+                            document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                        />
                      </div>
                    </div>
                  )}

@@ -1,3 +1,4 @@
+import { GoogleGenAI, Type } from "@google/genai";
 import { calculateTransitMoon } from './astrologyService';
 
 interface HoroscopeTip {
@@ -6,42 +7,90 @@ interface HoroscopeTip {
   vibe: string;
 }
 
-const TIPS: Record<string, HoroscopeTip> = {
+const FALLBACK_TIPS: Record<string, HoroscopeTip> = {
   Conjunction: {
     type: 'positive',
-    text: 'Сегодня Луна соединяется с вашим Солнцем. Это день мощного обновления энергии. Начинайте новые дела и верьте в себя! Отличное время для самовыражения и реализации личных амбиций. В сфере любви возможны яркие вспышки страсти, а в карьере — неожиданные озарения, которые помогут решить давнюю проблему.',
+    text: 'Сегодня Луна соединяется с вашим Солнцем. Это день мощного обновления энергии. Начинайте новые дела и верьте в себя! Отличное время для самовыражения и реализации личных амбиций.',
     vibe: 'Энергия и Начала'
   },
   Opposition: {
     type: 'negative',
-    text: 'Луна в оппозиции к вашему Солнцу. Возможен внутренний конфликт или споры с окружающими. Лучше отдохнуть и не спорить с боссом. Постарайтесь найти баланс между своими желаниями и потребностями близких. В финансовом плане избегайте крупных покупок и рискованных инвестиций.',
+    text: 'Луна в оппозиции к вашему Солнцу. Возможен внутренний конфликт или споры с окружающими. Лучше отдохнуть и не спорить с боссом.',
     vibe: 'Баланс и Терпение'
   },
   Trine: {
     type: 'positive',
-    text: 'Гармоничный трин Луны к вашему Солнцу. Все дела спорятся, а удача сама идет в руки. Отличное время для творчества и любви. Ваша интуиция сегодня на высоте, прислушивайтесь к внутреннему голосу. Возможны приятные сюрпризы от старых друзей или неожиданная прибыль.',
+    text: 'Гармоничный трин Луны к вашему Солнцу. Все дела спорятся, а удача сама идет в руки. Отличное время для творчества и любви.',
     vibe: 'Гармония и Удача'
   },
   Square: {
     type: 'negative',
-    text: 'Луна в квадрате к вашему Солнцу. Напряженный день. Избегайте импульсивных решений и берегите нервную систему. Могут возникнуть препятствия в делах, требующие нестандартного подхода. В отношениях возможны недопонимания, поэтому старайтесь быть максимально честными и открытыми.',
+    text: 'Луна в квадрате к вашему Солнцу. Напряженный день. Избегайте импульсивных решений и берегите нервную систему.',
     vibe: 'Вызов и Выдержка'
   },
   Sextile: {
     type: 'positive',
-    text: 'Благоприятный секстиль Луны. Хороший день для общения, новых знакомств и обмена идеями. Будьте открыты миру. Это идеальное время для переговоров, подписания контрактов и коротких поездок. В романтической сфере возможны приятные знакомства, которые перерастут во что-то большее.',
+    text: 'Благоприятный секстиль Луны. Хороший день для общения, новых знакомств и обмена идеями. Будьте открыты миру.',
     vibe: 'Общение и Возможности'
   },
   Neutral: {
     type: 'neutral',
-    text: 'Сегодня спокойный день. Звезды не дают резких указаний, так что просто следуйте своему обычному ритму. Посвятите время рутинным задачам, наведению порядка дома или на рабочем месте. Вечер отлично подойдет для расслабляющих процедур, чтения книги или просмотра любимого фильма.',
+    text: 'Сегодня спокойный день. Звезды не дают резких указаний, так что просто следуйте своему обычному ритму.',
     vibe: 'Спокойствие и Рутина'
   }
 };
 
-export async function getDailyHoroscope(natalSunLongitude: number) {
+const ZODIAC_SIGNS_RU = {
+  Aries: 'Овен', Taurus: 'Телец', Gemini: 'Близнецы', Cancer: 'Рак', 
+  Leo: 'Лев', Virgo: 'Дева', Libra: 'Весы', Scorpio: 'Скорпион', 
+  Sagittarius: 'Стрелец', Capricorn: 'Козерог', Aquarius: 'Водолей', Pisces: 'Рыбы'
+};
+
+const getZodiacSign = (longitude: number) => {
+  const signs = [
+    'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+    'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+  ];
+  return signs[Math.floor(longitude / 30)];
+};
+
+export async function getDailyHoroscope(natalSunLongitude: number): Promise<HoroscopeTip> {
   const transitMoon = await calculateTransitMoon(new Date());
-  
+  const sign = getZodiacSign(natalSunLongitude);
+  const signRu = ZODIAC_SIGNS_RU[sign as keyof typeof ZODIAC_SIGNS_RU] || sign;
+
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Сгенерируй персонализированный гороскоп на сегодня для знака ${signRu}. 
+      Учти текущий транзит Луны (в знаке ${ZODIAC_SIGNS_RU[transitMoon.sign as keyof typeof ZODIAC_SIGNS_RU]}).
+      
+      Стиль: эзотерический, вдохновляющий, глубокий, в духе CosmicVibes.
+      Max length: 200 characters.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            text: { type: Type.STRING, description: "Текст гороскопа" },
+            vibe: { type: Type.STRING, description: "Короткая фраза - вайб дня (2-3 слова)" },
+            type: { type: Type.STRING, enum: ['positive', 'neutral', 'negative'], description: "Общий характер дня" }
+          },
+          required: ["text", "vibe", "type"]
+        }
+      }
+    });
+
+    const result = JSON.parse(response.text || '{}');
+    if (result.text && result.vibe && result.type) {
+      return result as HoroscopeTip;
+    }
+  } catch (error) {
+    console.error("Horoscope generation error:", error);
+  }
+
+  // Fallback to aspect-based logic
   const diff = Math.abs(transitMoon.longitude - natalSunLongitude);
   const angle = diff > 180 ? 360 - diff : diff;
   
@@ -61,5 +110,5 @@ export async function getDailyHoroscope(natalSunLongitude: number) {
     }
   }
 
-  return TIPS[foundAspect];
+  return FALLBACK_TIPS[foundAspect];
 }

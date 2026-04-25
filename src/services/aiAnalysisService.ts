@@ -24,7 +24,7 @@ export interface AIAnalysisResponse {
 
 export async function generateDeepAnalysis(natalData: any, mbti: string): Promise<AIAnalysisResponse> {
   // Priority: VITE_ prefixed env (Standard Vite) -> process.env (AI Studio / Vite define)
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (process.env as any).GEMINI_API_KEY;
+  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (process.env as any).GEMINI_API_KEY;
   
   if (!apiKey || apiKey === "undefined" || apiKey === "") {
     throw new Error(
@@ -64,7 +64,7 @@ MBTI: ${mbti}
 
 СТРУКТУРА ОТВЕТА (JSON):
 "core": 
-  "title": Креативное название, например "Ядро: Звёздный [Архетип]",
+  "title": Креативное название (например, "Душевный Стратег"). НЕ используйте слова "Ядро" или "Разбор" в этом заголовке.
   "text": Синтез Солнца (${sunSign}) и доминирующих функций MBTI (${mbti}). Короткий, емкий нарратив о том, как она воспринимает мир и в чем её истинная природа.
 
 "shadow": 

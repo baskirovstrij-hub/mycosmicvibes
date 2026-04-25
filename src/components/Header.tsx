@@ -31,14 +31,24 @@ export default function Header({ onNavigate, currentMode, hasUserData }: HeaderP
   }, []);
 
   const menuItems = [
-    { id: 'experience', label: 'Мой Путь', icon: User, color: 'text-gold' },
+    { id: 'experience', label: 'Мой Путь', icon: User, color: 'text-amber-500' },
     { id: 'analysis', label: 'Разбор', icon: Brain, color: 'text-emerald-500' },
-    { id: 'synastry', label: 'Совместимость', icon: Heart, color: 'text-purple-500' },
+    { id: 'synastry', label: 'Совместимость', icon: Heart, color: 'text-red-500' },
   ];
 
-  const logoColor = 'text-purple-500';
-  const logoHoverColor = 'group-hover:text-purple-400';
-  const logoBgColor = 'bg-purple-500/10';
+  const getThemeColor = (mode: string) => {
+    switch (mode) {
+      case 'synastry': return 'red-500';
+      case 'analysis': return 'emerald-500';
+      case 'experience': return 'amber-500';
+      default: return 'purple-500';
+    }
+  };
+
+  const themeColor = getThemeColor(currentMode);
+  const logoColor = `text-${themeColor}`;
+  const logoHoverColor = `group-hover:text-${themeColor.replace('500', '400')}`;
+  const logoBgColor = `bg-${themeColor}/10`;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
@@ -63,7 +73,7 @@ export default function Header({ onNavigate, currentMode, hasUserData }: HeaderP
              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
              className="overflow-hidden whitespace-nowrap"
           >
-            <span className="text-lg font-medium tracking-[0.2em] text-white/90 lowercase group-hover:text-white transition-colors pl-2">cosmic<span className="text-[#ba76ff] font-light group-hover:text-amber-200 transition-colors">vibes</span></span>
+            <span className="text-lg font-medium tracking-[0.2em] text-white/90 lowercase group-hover:text-white transition-colors pl-2">cosmic<span className={`${logoColor} font-light group-hover:text-amber-200 transition-colors`}>vibes</span></span>
           </motion.div>
         </motion.div>
 
