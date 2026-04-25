@@ -151,13 +151,13 @@ export default function MBTIQuiz({ onComplete }: MBTIQuizProps) {
             animate={{ opacity: 1, scale: 1 }}
             className="text-center space-y-8 py-10"
           >
-            <div className="relative inline-block">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 blur-3xl opacity-20 bg-gradient-to-r from-emerald-400 via-blue-500 to-emerald-400"
-              />
-              <div className="relative p-8 rounded-full bg-white/5 border border-white/10 text-emerald-400">
+            <div className="relative inline-block gpu-accelerate">
+              <div className="absolute inset-0 blur-2xl opacity-20 gpu-accelerate overflow-visible">
+                 <div
+                   className="w-full h-full bg-gradient-to-r from-emerald-400 via-blue-500 to-emerald-400 rounded-full scale-150"
+                 />
+              </div>
+              <div className="relative p-8 rounded-full bg-white/5 border border-white/10 text-emerald-400 z-10">
                 <Brain size={64} strokeWidth={1.5} />
               </div>
             </div>

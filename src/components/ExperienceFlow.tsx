@@ -197,19 +197,19 @@ const ResultBackgroundGlows = memo(({ natalData }: { natalData: any }) => {
   })), []);
 
   return (
-    <div className="fixed top-0 left-0 w-full h-[100svh] pointer-events-none z-0 overflow-hidden opacity-80">
+    <div className="fixed top-0 left-0 w-full h-[100svh] pointer-events-none z-0 overflow-hidden opacity-80 gpu-accelerate">
       <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-black z-0" />
       
-      <div className="absolute top-[20%] left-[10%] w-[40vw] h-[40vw] bg-purple-900/40 rounded-full blur-[100px] mix-blend-screen z-0" />
-      <div className="absolute top-[60%] right-[10%] w-[50vw] h-[50vw] bg-indigo-900/30 rounded-full blur-[120px] mix-blend-screen z-0" />
-      <div className="absolute top-[80%] left-[30%] w-[30vw] h-[30vw] bg-gold/10 rounded-full blur-[90px] mix-blend-screen z-0" />
-      <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[90vw] h-[90vw] bg-purple-600/20 rounded-full blur-[120px] mix-blend-screen z-0" />
-      <div className="absolute top-[30%] right-[20%] w-[25vw] h-[25vw] bg-purple-500/15 rounded-full blur-[100px] mix-blend-screen z-0" />
+      <div className="absolute top-[20%] left-[10%] w-[40vw] h-[40vw] bg-purple-900/40 rounded-full blur-[100px] mix-blend-screen z-0 gpu-accelerate overflow-visible" />
+      <div className="absolute top-[60%] right-[10%] w-[50vw] h-[50vw] bg-indigo-900/30 rounded-full blur-[120px] mix-blend-screen z-0 gpu-accelerate overflow-visible" />
+      <div className="absolute top-[80%] left-[30%] w-[30vw] h-[30vw] bg-gold/10 rounded-full blur-[90px] mix-blend-screen z-0 gpu-accelerate overflow-visible" />
+      <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[90vw] h-[90vw] bg-purple-600/20 rounded-full blur-[120px] mix-blend-screen z-0 gpu-accelerate overflow-visible" />
+      <div className="absolute top-[30%] right-[20%] w-[25vw] h-[25vw] bg-purple-500/15 rounded-full blur-[100px] mix-blend-screen z-0 gpu-accelerate overflow-visible" />
 
       <motion.div 
         animate={{ scale: [1, 1.15, 1], opacity: [0.1, 0.2, 0.1] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] md:w-[60vh] md:h-[60vh] bg-purple-600/30 rounded-full blur-[120px] mix-blend-screen z-0" 
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] md:w-[60vh] md:h-[60vh] bg-purple-600/30 rounded-full blur-[120px] mix-blend-screen z-0 gpu-accelerate overflow-visible" 
       />
 
       <div className="absolute left-1/2 top-[8%] -translate-x-1/2 flex items-center justify-center mix-blend-screen opacity-70 z-10 overflow-visible pointer-events-none rounded-full">
@@ -506,7 +506,7 @@ export default function ExperienceFlow() {
               <p className="text-gray-500 text-sm font-light">Нам нужны данные вашего рождения для расчета натальной карты.</p>
             </div>
             
-            <div className="space-y-4 md:p-10 py-8 px-4 rounded-[3rem] sm:bg-white/[0.02] sm:border border-white/5 sm:backdrop-blur-3xl transition-all">
+            <div className="space-y-4 md:p-10 py-8 px-4 rounded-[3rem] sm:bg-white/[0.05] sm:border border-white/5 sm:backdrop-blur-lg transition-all gpu-accelerate">
               <div className="space-y-8">
                 <div className="space-y-4">
                   <label className="text-[10px] font-medium text-gray-400 uppercase tracking-[0.3em] ml-1 flex items-center gap-2">

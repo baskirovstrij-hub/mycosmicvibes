@@ -18,17 +18,17 @@ import { useSynastryStore } from './store/synastryStore';
 type AppMode = 'home' | 'experience' | 'synastry' | 'profile' | 'analysis';
 
 const SynastryBackground = memo(({ stars }: { stars: any[] }) => (
-  <div className="fixed inset-0 z-[-10] pointer-events-none overflow-hidden">
+  <div className="fixed inset-0 z-[-10] pointer-events-none overflow-hidden gpu-accelerate">
     <div className="absolute inset-0 bg-red-950/20" />
     <motion.div 
       animate={{ opacity: [0.15, 0.25, 0.15], scale: [1, 1.05, 1] }}
       transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-      className="absolute top-[10%] left-[5%] w-[80vw] h-[80vw] bg-red-600/25 rounded-full blur-[180px]" 
+      className="absolute top-[10%] left-[5%] w-[80vw] h-[80vw] bg-red-600/25 rounded-full blur-[180px] gpu-accelerate overflow-visible" 
     />
     <motion.div 
       animate={{ opacity: [0.1, 0.2, 0.1], scale: [1, 1.03, 1] }}
       transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-      className="absolute bottom-[10%] right-[10%] w-[70vw] h-[70vw] bg-rose-600/20 rounded-full blur-[160px]" 
+      className="absolute bottom-[10%] right-[10%] w-[70vw] h-[70vw] bg-rose-600/20 rounded-full blur-[160px] gpu-accelerate overflow-visible" 
     />
     {stars.map((star) => (
       <motion.div
@@ -44,17 +44,17 @@ const SynastryBackground = memo(({ stars }: { stars: any[] }) => (
 ));
 
 const AnalysisBackground = memo(({ stars }: { stars: any[] }) => (
-  <div className="fixed inset-0 z-[-10] pointer-events-none overflow-hidden">
+  <div className="fixed inset-0 z-[-10] pointer-events-none overflow-hidden gpu-accelerate">
     <div className="absolute inset-0 bg-emerald-950/20" />
     <motion.div 
       animate={{ opacity: [0.1, 0.2, 0.1], scale: [1, 1.05, 1] }}
       transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-      className="absolute top-[10%] left-[15%] w-[80vw] h-[80vw] bg-emerald-600/20 rounded-full blur-[180px]" 
+      className="absolute top-[10%] left-[15%] w-[80vw] h-[80vw] bg-emerald-600/20 rounded-full blur-[180px] gpu-accelerate overflow-visible" 
     />
     <motion.div 
       animate={{ opacity: [0.1, 0.2, 0.1], scale: [1, 1.03, 1] }}
       transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-      className="absolute bottom-[10%] right-[5%] w-[70vw] h-[70vw] bg-teal-600/15 rounded-full blur-[160px]" 
+      className="absolute bottom-[10%] right-[5%] w-[70vw] h-[70vw] bg-teal-600/15 rounded-full blur-[160px] gpu-accelerate overflow-visible" 
     />
     {stars.map((star) => (
       <motion.div

@@ -96,7 +96,7 @@ export default function CustomDatePicker({ value, onChange, colorTheme, isPartne
               exit={{ opacity: 0, y: "100%" }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               style={{ willChange: 'transform, opacity' }}
-              className={`relative w-full max-w-lg ${isRed ? 'bg-red-950/40' : 'bg-slate-900/40'} backdrop-blur-3xl border-t sm:border border-white/10 rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col`}
+              className={`relative w-full max-w-lg ${isRed ? 'bg-red-950/80' : 'bg-slate-900/80'} backdrop-blur-lg border-t sm:border border-white/10 rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col gpu-accelerate`}
             >
               <div className="p-6 md:p-8 space-y-6 md:space-y-10 relative z-10">
                 <div className="flex items-center justify-between">

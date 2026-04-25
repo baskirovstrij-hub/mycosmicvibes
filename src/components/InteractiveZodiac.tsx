@@ -278,7 +278,7 @@ export default function InteractiveZodiac({ data }: InteractiveZodiacProps) {
             initial={{ opacity: 0, scale: 0.9, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 10 }}
-            className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/[0.03] border border-white/10 p-4 rounded-[2rem] shadow-2xl backdrop-blur-3xl z-20 min-w-[200px] text-center"
+            className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/[0.03] border border-white/10 p-4 rounded-[2rem] shadow-2xl backdrop-blur-md z-20 min-w-[200px] text-center gpu-accelerate"
           >
             <div className="text-3xl mb-2 drop-shadow-2xl">{PLANET_SYMBOLS[hoveredPlanet.name]}</div>
             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-1">
@@ -306,7 +306,7 @@ export default function InteractiveZodiac({ data }: InteractiveZodiacProps) {
               initial={{ opacity: 0, scale: 0.9, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 10 }}
-              className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/[0.03] border border-white/10 p-4 rounded-[2rem] shadow-2xl backdrop-blur-3xl z-20 min-w-[220px] text-center"
+              className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/[0.03] border border-white/10 p-4 rounded-[2rem] shadow-2xl backdrop-blur-md z-20 min-w-[220px] text-center gpu-accelerate"
             >
               <div className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: ASPECT_COLORS[hoveredAspect.type] }}>
                 {translateAspectName(hoveredAspect.type)}
