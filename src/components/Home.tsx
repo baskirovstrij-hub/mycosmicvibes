@@ -151,9 +151,11 @@ const NebulaCloud = () => {
 
 interface HomeProps {
   onNavigate: (mode: 'form' | 'synastry' | 'chart' | 'mbti' | 'profile') => void;
+  user?: any;
 }
 
-export default function Home({ onNavigate }: HomeProps) {
+export default function Home({ onNavigate, user }: HomeProps) {
+  const firstName = user?.first_name || '';
   return (
     <section className="relative flex-1 w-full flex flex-col items-center justify-center text-center overflow-hidden">
       {/* Mystical Background Elements */}
@@ -198,6 +200,17 @@ export default function Home({ onNavigate }: HomeProps) {
           >
             cosmic<span className="text-purple-400 font-light">vibes</span>
           </motion.h1>
+
+          {firstName && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="text-xs md:text-sm text-gold/80 font-light tracking-[0.3em] uppercase"
+            >
+              Приветствую, {firstName}
+            </motion.div>
+          )}
           
           <motion.p 
             initial={{ opacity: 0 }}

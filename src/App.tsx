@@ -14,6 +14,7 @@ import AnalysisDashboard from './components/AnalysisDashboard';
 import { motion, AnimatePresence } from 'motion/react';
 import { useUserStore } from './store/userStore';
 import { useSynastryStore } from './store/synastryStore';
+import { useTelegram } from './hooks/useTelegram';
 
 type AppMode = 'home' | 'experience' | 'synastry' | 'profile' | 'analysis';
 
@@ -70,6 +71,7 @@ const AnalysisBackground = memo(({ stars }: { stars: any[] }) => (
 ));
 
 export default function App() {
+  const { tg, user } = useTelegram();
   const [mode, setMode] = useState<AppMode>('home');
   const { natalData } = useUserStore();
 
@@ -124,7 +126,7 @@ export default function App() {
   const content = () => {
     switch (mode) {
       case 'home':
-        return <Home onNavigate={(m) => navigateTo(m as AppMode)} />;
+        return <Home user={user} onNavigate={(m) => navigateTo(m as AppMode)} />;
       case 'experience':
         return <ExperienceFlow />;
       case 'profile':

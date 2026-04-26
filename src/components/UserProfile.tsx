@@ -74,7 +74,7 @@ export default function UserProfile() {
                   {MBTI_DESCRIPTIONS[mbtiResult]?.title}
                 </div>
                 <p className="text-gray-300 leading-relaxed italic">
-                  "{MBTI_DESCRIPTIONS[mbtiResult]?.desc}"
+                  {MBTI_DESCRIPTIONS[mbtiResult]?.desc}
                 </p>
                 <p className="text-gray-400 leading-relaxed text-sm bg-black/20 p-4 rounded-xl border border-white/5">
                   {MBTI_DESCRIPTIONS[mbtiResult]?.fullDesc}

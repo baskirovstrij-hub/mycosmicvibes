@@ -56,7 +56,7 @@ export default function DailyVibe({ horoscope }: DailyVibeProps) {
       </div>
       
       <p className="text-gray-200 leading-relaxed text-lg italic first-letter:uppercase">
-        "{horoscope.text.toLowerCase().replace(/^\s*\w/, c => c.toUpperCase())}"
+        {horoscope.text.replace(/^"|"$/g, '').toLowerCase().replace(/^\s*\w/, c => c.toUpperCase())}
       </p>
       
       <div className="pt-2 flex items-center gap-2 text-[10px] text-gray-500 uppercase tracking-tighter">

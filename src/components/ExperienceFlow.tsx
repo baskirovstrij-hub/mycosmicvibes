@@ -649,7 +649,7 @@ export default function ExperienceFlow() {
                                     <Sparkles size={10} className="text-gold" />
                                     <span>Энергия дня: <span className="text-gold font-medium">{natalData.horoscope.vibe.toLowerCase().replace(/^\w/, c => c.toUpperCase())}</span></span>
                                  </span>
-                                 "{natalData.horoscope.text.toLowerCase().replace(/^\s*\w/, c => c.toUpperCase())}"
+                                 {natalData.horoscope.text.replace(/^"|"$/g, '').toLowerCase().replace(/^\s*\w/, c => c.toUpperCase())}
                               </div>
                            </motion.div>
                         )}

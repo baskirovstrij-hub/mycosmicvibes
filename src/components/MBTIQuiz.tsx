@@ -177,7 +177,7 @@ export default function MBTIQuiz({ onComplete }: MBTIQuizProps) {
                 transition={{ delay: 0.3 }}
                 className="text-2xl font-semibold text-gold"
               >
-                «{MBTI_DESCRIPTIONS[result]?.title}»
+                {MBTI_DESCRIPTIONS[result]?.title}
               </motion.h3>
               <motion.p 
                 initial={{ y: 20, opacity: 0 }}
@@ -185,7 +185,7 @@ export default function MBTIQuiz({ onComplete }: MBTIQuizProps) {
                 transition={{ delay: 0.4 }}
                 className="text-gray-400 text-lg max-w-md mx-auto leading-relaxed italic"
               >
-                "{MBTI_DESCRIPTIONS[result]?.desc}"
+                {MBTI_DESCRIPTIONS[result]?.desc}
               </motion.p>
               <motion.p 
                 initial={{ y: 20, opacity: 0 }}

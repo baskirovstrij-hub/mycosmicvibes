@@ -272,7 +272,7 @@ export default function ZodiacCompatibility({ userSign }: ZodiacCompatibilityPro
                   <Heart size={20} />
                   <h4 className="font-bold uppercase text-sm">Любовный план</h4>
                 </div>
-                <p className="text-gray-300 leading-relaxed italic">"{compat.love}"</p>
+                <p className="text-gray-300 leading-relaxed italic">{compat.love}</p>
               </div>
 
               <div className="p-6 rounded-3xl bg-blue-500/5 border border-blue-500/20 space-y-3">
@@ -280,7 +280,7 @@ export default function ZodiacCompatibility({ userSign }: ZodiacCompatibilityPro
                   <Users size={20} />
                   <h4 className="font-bold uppercase text-sm">Общий план</h4>
                 </div>
-                <p className="text-gray-300 leading-relaxed italic">"{compat.general}"</p>
+                <p className="text-gray-300 leading-relaxed italic">{compat.general}</p>
               </div>
             </div>
 
