@@ -12,38 +12,22 @@ export function useAuth() {
   const { setUserData, setNatalData, setMbtiData, setAnalysisData } = useUserStore();
 
   useEffect(() => {
-    let unsubProfile: (() => void) | undefined;
-
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      // Cleanup previous profile listener if it exists
-      if (unsubProfile) {
-        unsubProfile();
-        unsubProfile = undefined;
-      }
-
       if (firebaseUser) {
-        // Listen to profile changes in real-time
+        // Fetch profile once on login (prevents infinite sync loops)
         const userDoc = doc(db, 'users', firebaseUser.uid);
-        
-        unsubProfile = onSnapshot(userDoc, (docSnap) => {
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            // Sync Firebase data to local store IF store is empty (initial load)
-            // or if we want Firebase to be the source of truth
-            if (data.userData) setUserData(data.userData);
-            if (data.natalData) setNatalData(data.natalData);
-            if (data.mbtiResult || data.mbtiAnswers) {
-              setMbtiData(data.mbtiResult || null, data.mbtiAnswers || null);
-            }
-            if (data.analysisData) setAnalysisData(data.analysisData);
-          }
-        }, (err) => {
-          console.error("Profile sync error:", err);
-        });
-
-        // Initial creation with TG data if needed
         const snap = await getDoc(userDoc);
-        if (!snap.exists()) {
+        
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data.userData) setUserData(data.userData);
+          if (data.natalData) setNatalData(data.natalData);
+          if (data.mbtiResult || data.mbtiAnswers) {
+            setMbtiData(data.mbtiResult || null, data.mbtiAnswers || null);
+          }
+          if (data.analysisData) setAnalysisData(data.analysisData);
+        } else {
+          // Create new profile if it doesn't exist
           const newProfile = {
             tgId: tgUser ? tgUser.id.toString() : 'web',
             firstName: tgUser?.first_name || 'Guest',
@@ -72,9 +56,6 @@ export function useAuth() {
 
     return () => {
       unsubscribe();
-      if (unsubProfile) {
-        unsubProfile();
-      }
     };
   }, [tgUser]);
 
