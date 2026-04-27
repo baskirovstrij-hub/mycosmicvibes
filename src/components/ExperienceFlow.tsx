@@ -285,9 +285,14 @@ export default function ExperienceFlow() {
     // Determine initial step synchronously to avoid flicker
     if (natalData && mbtiResult) return 'result';
     if (userData?.name) return 'mbti';
+    if (tgUser?.first_name) return 'mbti'; // Skips intro
     return 'intro';
   });
-  const [userName, setUserName] = useState(userData?.name || '');
+  const [userName, setUserName] = useState(() => {
+     if (userData?.name) return userData.name;
+     if (tgUser?.first_name) return tgUser.first_name;
+     return '';
+  });
   
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number; name: string } | null>(null);

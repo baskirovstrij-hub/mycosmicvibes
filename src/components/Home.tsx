@@ -150,7 +150,7 @@ const NebulaCloud = () => {
 };
 
 interface HomeProps {
-  onNavigate: (mode: 'form' | 'synastry' | 'chart' | 'mbti' | 'profile') => void;
+  onNavigate: (mode: 'form' | 'synastry' | 'chart' | 'mbti' | 'profile' | 'terms' | 'privacy') => void;
   user?: any;
 }
 
@@ -196,9 +196,9 @@ export default function Home({ onNavigate, user }: HomeProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-4xl sm:text-5xl md:text-6xl font-medium tracking-[0.2em] text-white/90 lowercase drop-shadow-lg flex items-center justify-center max-w-[300px] sm:max-w-full mx-auto"
+            className="text-4xl sm:text-5xl md:text-6xl font-medium tracking-[0.2em] text-white/90 drop-shadow-lg flex items-center justify-center mx-auto"
           >
-            cosmic<span className="text-purple-400 font-light">vibes</span>
+            Cosmic<span className="text-purple-400 font-light">Vibes</span>
           </motion.h1>
 
           {firstName && (
@@ -253,7 +253,30 @@ export default function Home({ onNavigate, user }: HomeProps) {
               <div className="text-[8px] md:text-[10px] text-white font-light uppercase tracking-[0.2em] md:tracking-[0.4em]">судьба</div>
            </div>
         </div>
+
+        {/* ... previous content ended here ... */}
       </motion.div>
+
+      {/* Visible Legal Footer at the very bottom */}
+      <div className="absolute bottom-6 w-full flex flex-col items-center gap-2 z-20 opacity-30 hover:opacity-100 transition-opacity duration-1000">
+        <div className="flex gap-10">
+          <button 
+            onClick={() => onNavigate('terms')}
+            className="text-[8px] uppercase tracking-[0.4em] text-white/60 hover:text-white transition-colors"
+          >
+            Оферта
+          </button>
+          <button 
+            onClick={() => onNavigate('privacy')}
+            className="text-[8px] uppercase tracking-[0.4em] text-white/60 hover:text-white transition-colors"
+          >
+            Приватность
+          </button>
+        </div>
+        <p className="text-[6px] text-gray-600 tracking-tighter uppercase font-medium">
+          CosmicVibes © 2026 • Bashkirov D.A.
+        </p>
+      </div>
     </section>
   );
 }

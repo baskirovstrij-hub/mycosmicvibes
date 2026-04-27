@@ -18,7 +18,10 @@ import { useTelegram } from './hooks/useTelegram';
 import { useAuth } from './hooks/useAuth';
 import { useUserSync } from './hooks/useUserSync';
 
-type AppMode = 'home' | 'experience' | 'synastry' | 'profile' | 'analysis';
+import TermsOfService from './components/legal/TermsOfService';
+import PrivacyPolicy from './components/legal/PrivacyPolicy';
+
+type AppMode = 'home' | 'experience' | 'synastry' | 'profile' | 'analysis' | 'terms' | 'privacy';
 
 const SynastryBackground = memo(({ stars }: { stars: any[] }) => (
   <div className="fixed inset-0 z-[-10] pointer-events-none overflow-hidden">
@@ -132,12 +135,13 @@ export default function App() {
       case 'home':
         return <Home user={tgUser} onNavigate={(m) => navigateTo(m as AppMode)} />;
       case 'experience':
-        return <ExperienceFlow />;
-      case 'profile':
-        // Reuse ExperienceFlow for infographic if data exists
-        return <ExperienceFlow />;
+        return <ExperienceFlow tgUser={tgUser} />;
       case 'analysis':
         return <AnalysisDashboard />;
+      case 'terms':
+        return <TermsOfService />;
+      case 'privacy':
+        return <PrivacyPolicy />;
       case 'synastry':
         return (
           <div className="relative w-full flex flex-col items-center">

@@ -8,36 +8,43 @@ import { useUserStore } from '../store/userStore';
 export function useAuth() {
   const { user: tgUser } = useTelegram();
   const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { setUserData, setNatalData, setMbtiData, setAnalysisData } = useUserStore();
 
   useEffect(() => {
+    let unsubProfile: (() => void) | undefined;
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (unsubProfile) unsubProfile();
+
       if (firebaseUser) {
-        // Fetch profile once on login (prevents infinite sync loops)
         const userDoc = doc(db, 'users', firebaseUser.uid);
-        const snap = await getDoc(userDoc);
         
-        if (snap.exists()) {
-          const data = snap.data();
-          if (data.userData) setUserData(data.userData);
-          if (data.natalData) setNatalData(data.natalData);
-          if (data.mbtiResult || data.mbtiAnswers) {
-            setMbtiData(data.mbtiResult || null, data.mbtiAnswers || null);
+        // Use onSnapshot for the profile to catch payment updates in real-time
+        unsubProfile = onSnapshot(userDoc, (snap) => {
+          if (snap.exists()) {
+            const data = snap.data();
+            setProfile(data);
+            
+            // Sync large data to store only if not already present
+            // This prevents overwriting local state during active sessions
+            if (data.userData && !useUserStore.getState().userData) setUserData(data.userData);
+            if (data.natalData && !useUserStore.getState().natalData) setNatalData(data.natalData);
+            if (data.analysisData && !useUserStore.getState().analysisData) setAnalysisData(data.analysisData);
+          } else {
+            // Create new profile if it doesn't exist
+            const newProfile = {
+              tgId: tgUser ? tgUser.id.toString() : 'web',
+              firstName: tgUser?.first_name || 'Guest',
+              username: tgUser?.username || '',
+              isAnalysisPaid: false,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            };
+            setDoc(userDoc, newProfile);
           }
-          if (data.analysisData) setAnalysisData(data.analysisData);
-        } else {
-          // Create new profile if it doesn't exist
-          const newProfile = {
-            tgId: tgUser ? tgUser.id.toString() : 'web',
-            firstName: tgUser?.first_name || 'Guest',
-            username: tgUser?.username || '',
-            isAnalysisPaid: false,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          };
-          await setDoc(userDoc, newProfile);
-        }
+        });
 
         setUser(firebaseUser);
       } else {
@@ -56,6 +63,7 @@ export function useAuth() {
 
     return () => {
       unsubscribe();
+      if (unsubProfile) unsubProfile();
     };
   }, [tgUser]);
 
@@ -74,5 +82,5 @@ export function useAuth() {
     });
   };
 
-  return { user, loading, updateProfile };
+  return { user, profile, loading, updateProfile };
 }

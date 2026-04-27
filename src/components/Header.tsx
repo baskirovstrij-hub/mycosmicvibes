@@ -73,7 +73,7 @@ export default function Header({ onNavigate, currentMode, hasUserData }: HeaderP
              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
              className="overflow-hidden whitespace-nowrap"
           >
-            <span className="text-lg font-medium tracking-[0.2em] text-white/90 lowercase group-hover:text-white transition-colors pl-2">cosmic<span className={`${logoColor} font-light group-hover:text-amber-200 transition-colors`}>vibes</span></span>
+            <span className="text-lg font-medium tracking-[0.2em] text-white/90 group-hover:text-white transition-colors pl-2">Cosmic<span className={`${logoColor} font-light group-hover:text-amber-200 transition-colors`}>Vibes</span></span>
           </motion.div>
         </motion.div>
 
