@@ -18,22 +18,29 @@ export function useAuth() {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (unsubProfile) unsubProfile();
 
+      // Fallback timeout in case Firebase is stuck or quota exceeded
+      const authTimeout = setTimeout(() => {
+        if (loading) {
+          console.warn("Auth sync timed out, potentially due to Firebase limits. Proceeding with local state.");
+          setLoading(false);
+        }
+      }, 6000);
+
       if (firebaseUser) {
         const userDoc = doc(db, 'users', firebaseUser.uid);
         
         // Use onSnapshot for the profile to catch payment updates in real-time
         unsubProfile = onSnapshot(userDoc, (snap) => {
+          clearTimeout(authTimeout);
           if (snap.exists()) {
             const data = snap.data();
             setProfile(data);
             
             // Sync large data to store only if not already present
-            // This prevents overwriting local state during active sessions
             if (data.userData && !useUserStore.getState().userData) setUserData(data.userData);
             if (data.natalData && !useUserStore.getState().natalData) setNatalData(data.natalData);
             if (data.analysisData && !useUserStore.getState().analysisData) setAnalysisData(data.analysisData);
           } else {
-            // Create new profile if it doesn't exist
             const newProfile = {
               tgId: tgUser ? tgUser.id.toString() : 'web',
               firstName: tgUser?.first_name || 'Guest',
@@ -44,21 +51,23 @@ export function useAuth() {
             };
             setDoc(userDoc, newProfile);
           }
+          setLoading(false);
+        }, (error) => {
+          clearTimeout(authTimeout);
+          console.error("Profile sync error (likely Quota Exceeded):", error);
+          setLoading(false);
         });
 
         setUser(firebaseUser);
       } else {
+        clearTimeout(authTimeout); // Not needed if not logged in yet
         try {
           await signInAnonymously(auth);
         } catch (error: any) {
-          if (error.code === 'auth/admin-restricted-operation') {
-            console.error("Firebase Auth Error: Please enable 'Anonymous' sign-in provider in your Firebase Console (Authentication -> Sign-in method).");
-          } else {
-            console.error("Auth Error:", error);
-          }
+          console.error("Auth Error:", error);
+          setLoading(false);
         }
       }
-      setLoading(false);
     });
 
     return () => {

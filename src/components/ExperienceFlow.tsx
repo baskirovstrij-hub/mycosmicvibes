@@ -278,12 +278,17 @@ const StaticCosmicStars = memo(({ stars, count, opacity, size }: { stars: any[],
   </motion.div>
 ));
 
-export default function ExperienceFlow() {
+export default function ExperienceFlow({ tgUser }: { tgUser?: any }) {
   const { setNatalData, setMbtiData, setUserData, userData, natalData, mbtiResult } = useUserStore();
   const [showAllPlanets, setShowAllPlanets] = useState(false);
   const [step, setStep] = useState<'intro' | 'birth' | 'mbti' | 'result'>(() => {
     // Determine initial step synchronously to avoid flicker
     if (natalData && mbtiResult) return 'result';
+    
+    // Safety check: if somehow we have mbtiResult but no natalData yet, 
+    // we should be at birth step, unless name is missing too
+    if (mbtiResult && !natalData) return 'birth';
+
     if (userData?.name) return 'mbti';
     if (tgUser?.first_name) return 'mbti'; // Skips intro
     return 'intro';
@@ -400,6 +405,9 @@ export default function ExperienceFlow() {
   };
 
   const resetAll = () => {
+    // Clear global store first to prevent auto-syncing old data back
+    useUserStore.getState().clearData();
+    
     setStep('intro');
     setUserName('');
     setStartDate(null);
@@ -407,8 +415,6 @@ export default function ExperienceFlow() {
     setQuizStep(0);
     setAnswers({});
     setScores({ E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 });
-    setNatalData(null);
-    setMbtiData(null, null);
   };
 
   const getStarsConfig = (currentStep: string) => {

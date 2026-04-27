@@ -133,11 +133,24 @@ export default function AnalysisDashboard() {
     );
   }
 
+  const isArchived = activeAnalysis && activeAnalysis.lockedName && userData?.name && activeAnalysis.lockedName !== userData.name;
   const displayMbti = activeAnalysis?.lockedMbti || mbtiResult;
 
   return (
     <div className="relative w-full max-w-4xl mx-auto px-6 md:px-0">
       
+      {isArchived && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-center"
+        >
+          <p className="text-amber-400 text-xs uppercase tracking-widest font-medium">
+            Архивный разбор для профиля: {activeAnalysis.lockedName} ({activeAnalysis.lockedMbti})
+          </p>
+        </motion.div>
+      )}
+
       {/* Header section */}
       <div className="text-center space-y-4 mb-16 pt-8">
          <motion.div
