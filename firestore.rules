@@ -1,0 +1,75 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Users Collection ---
+    match /users/{userId} {
+      function isValidUser(data) {
+        return data.keys().hasAll(['tgId', 'isAnalysisPaid'])
+          && data.tgId is string
+          && data.isAnalysisPaid is bool;
+      }
+
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) 
+        && isValidUser(incoming())
+        && incoming().isAnalysisPaid == false;
+      
+      allow update: if isOwner(userId)
+        && isValidUser(incoming())
+        && (
+          // Action: Update Profile & App State
+          (incoming().diff(existing()).affectedKeys().hasOnly([
+             'firstName', 'username', 'userData', 'natalData', 
+             'mbtiResult', 'mbtiAnswers', 'analysisData', 'updatedAt'
+           ])
+           && incoming().isAnalysisPaid == existing().isAnalysisPaid)
+        );
+    }
+
+    // --- Payments Collection ---
+    match /payments/{paymentId} {
+      function isValidPayment(data) {
+        return data.keys().hasAll(['userId', 'amount', 'status'])
+          && data.userId is string
+          && data.amount is number
+          && data.status in ['pending', 'completed', 'failed'];
+      }
+
+      // Users can only see their own payments
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      // Payments are typically created by system or verified. 
+      // For now, we restrict so users can't manufacture "completed" payments manually in a secure setup.
+      // Usually would be handled via backend/webhooks.
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid && incoming().status == 'pending';
+    }
+  }
+}

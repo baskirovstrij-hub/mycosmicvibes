@@ -15,6 +15,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useUserStore } from './store/userStore';
 import { useSynastryStore } from './store/synastryStore';
 import { useTelegram } from './hooks/useTelegram';
+import { useAuth } from './hooks/useAuth';
+import { useUserSync } from './hooks/useUserSync';
 
 type AppMode = 'home' | 'experience' | 'synastry' | 'profile' | 'analysis';
 
@@ -71,7 +73,9 @@ const AnalysisBackground = memo(({ stars }: { stars: any[] }) => (
 ));
 
 export default function App() {
-  const { tg, user } = useTelegram();
+  const { tg, user: tgUser } = useTelegram();
+  const { user, loading: authLoading } = useAuth();
+  useUserSync();
   const [mode, setMode] = useState<AppMode>('home');
   const { natalData } = useUserStore();
 
@@ -126,7 +130,7 @@ export default function App() {
   const content = () => {
     switch (mode) {
       case 'home':
-        return <Home user={user} onNavigate={(m) => navigateTo(m as AppMode)} />;
+        return <Home user={tgUser} onNavigate={(m) => navigateTo(m as AppMode)} />;
       case 'experience':
         return <ExperienceFlow />;
       case 'profile':

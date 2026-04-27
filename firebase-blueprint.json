@@ -1,0 +1,47 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile with birth data, analysis, and app state",
+      "type": "object",
+      "properties": {
+        "tgId": { "type": "string", "description": "Telegram user ID" },
+        "firstName": { "type": "string" },
+        "username": { "type": "string" },
+        "userData": { "type": "object", "description": "Raw birth form data" },
+        "natalData": { "type": "object", "description": "Calculated natal charts and interpretations" },
+        "mbtiResult": { "type": "string" },
+        "mbtiAnswers": { "type": "array" },
+        "analysisData": { "type": "object", "description": "Advanced premium analysis" },
+        "isAnalysisPaid": { "type": "boolean", "description": "Flag for paid analysis feature" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tgId", "isAnalysisPaid"]
+    },
+    "Payment": {
+      "title": "Payment Record",
+      "description": "Log of user payments",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "currency": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "completed", "failed"] },
+        "provider": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "amount", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Main user collection"
+    },
+    "/payments/{paymentId}": {
+      "schema": "Payment",
+      "description": "Transaction logs"
+    }
+  }
+}
