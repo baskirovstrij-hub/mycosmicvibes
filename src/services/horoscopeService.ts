@@ -60,13 +60,22 @@ export async function getDailyHoroscope(natalSunLongitude: number): Promise<Horo
   const transitMoonSignRu = ZODIAC_SIGNS_RU[transitMoon.sign as keyof typeof ZODIAC_SIGNS_RU] || transitMoon.sign;
 
   try {
+    console.log("🌠 Calling API: /api/generate-horoscope");
     const response = await fetch('/api/generate-horoscope', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify({ signRu, transitMoonSignRu }),
     });
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const text = await response.text();
+      console.error("❌ Expected JSON from horoscope but got:", text.substring(0, 100));
+      throw new Error("Server error: received HTML instead of JSON");
+    }
 
     if (!response.ok) throw new Error('Server error');
     

@@ -75,21 +75,46 @@ async function startServer() {
   if (BOT_TOKEN) {
     bot = new Telegraf(BOT_TOKEN);
 
+    bot.telegram.setMyCommands([
+      { command: 'start', description: 'Запустить CosmicVibes' },
+      { command: 'unlock_me', description: '🔓 (DEV) Разблокировать доступ' },
+      { command: 'help', description: 'Помощь и инструкции' }
+    ]);
+
     bot.start((ctx) => {
       const firstName = ctx.from?.first_name || 'Странник';
+      const welcomeMsg = `Приветствуем тебя в CosmicVibes, ${firstName}! ✨\n\nЯ — твой проводник в мир звезд и психологии. Исследуй свою натальную карту, узнай свой тип личности и получи глубокий разбор своей души.`;
+      
       ctx.reply(
-        `Приветствуем тебя в CosmicVibes, ${firstName}! ✨\n\nЯ — твой проводник в мир звезд и психологии. Исследуй свою натальную карту, узнай свой тип личности и получи глубокий разбор своей души.`,
-        Markup.inlineKeyboard([
-          [Markup.button.webApp('🚀 Запустить CosmicVibes', APP_URL)],
-          [
-            Markup.button.callback('✨ О функционале', 'about_features'),
-            Markup.button.callback('💳 Полный разбор (100₽)', 'buy_analysis')
-          ]
-        ])
+        welcomeMsg,
+        Markup.keyboard([
+          ['🚀 Запустить CosmicVibes'],
+          ['💳 Полный разбор (100₽)', '🔓 DEV Разблокировка'],
+          ['❓ Помощь']
+        ]).resize()
       );
+
+      // Keep inline version as well for the first message
+      ctx.reply('Выбери действие:', Markup.inlineKeyboard([
+        [Markup.button.webApp('🚀 Запустить CosmicVibes', APP_URL)],
+        [
+          Markup.button.callback('✨ О функционале', 'about_features'),
+          Markup.button.callback('💳 Купить разбор', 'buy_analysis')
+        ]
+      ]));
     });
 
-    bot.action('buy_analysis', (ctx) => {
+    bot.hears('🚀 Запустить CosmicVibes', (ctx) => {
+      ctx.reply('Нажми на кнопку ниже:', Markup.inlineKeyboard([
+        [Markup.button.webApp('🚀 Открыть приложение', APP_URL)]
+      ]));
+    });
+
+    bot.hears('❓ Помощь', (ctx) => {
+      ctx.reply('CosmicVibes — это твое зеркало в мире звезд.\n\n1. Заполни свои данные в приложении\n2. Получи расчет натальной карты\n3. Пройди тест на личность\n4. Оплати полный разбор для синтеза всех данных от ИИ.\n\nПо всем вопросам: @support');
+    });
+
+    const buyAnalysisHandler = (ctx: any) => {
       if (!PAYMENT_TOKEN) {
         console.error('❌ PAYMENT_TOKEN is missing!');
         return ctx.reply('⚠️ Платежная система временно недоступна (отсутствует конфигурация токена).');
@@ -98,62 +123,45 @@ async function startServer() {
       const timestamp = Date.now();
       const payload = `paid_analysis_${ctx.from.id}_${timestamp}`;
       
-      console.log(`💳 Generating fresh invoice for user ${ctx.from.id}`);
-      console.log(`🔹 Token: ${PAYMENT_TOKEN.substring(0, 10)}...`);
-      console.log(`🔹 Payload: ${payload}`);
-
       ctx.replyWithInvoice({
         title: 'Глубокий разбор личности ✨',
         description: 'Полный синтез твоей натальной карты и психологического типа личности от ИИ.',
         payload: payload,
         provider_token: PAYMENT_TOKEN,
         currency: 'RUB',
-        prices: [{ label: 'Разбор личности', amount: 10000 }], // 100 RUB (Minimum for Live)
+        prices: [{ label: 'Разбор личности', amount: 10000 }], // 100 RUB
         start_parameter: 'analysis_payment'
       }).catch(err => {
-        console.error('❌ Detailed Invoice Error:', err);
-        const errorMsg = err.description || err.message || 'Неизвестная ошибка';
-        ctx.reply(`❌ Ошибка при формировании счета: ${errorMsg}\n\n⚠️ Обратите внимание: для Live-платежей минимальная сумма обычно 100₽. Если вы тестируете, используйте тестовый токен в настройках.`);
+        console.error('❌ Invoice Error:', err);
+        ctx.reply(`❌ Ошибка: ${err.description || err.message}`);
       });
-    });
+    };
 
-    // Secret command for developer to bypass payment during testing
-    bot.command('unlock_me', async (ctx) => {
+    const unlockMeHandler = async (ctx: any) => {
       const tgId = ctx.from.id.toString();
-      console.log(`🔑 Developer bypass for testing: unlocking analysis for ${tgId}`);
-      
-      if (!adminDb) {
-        return ctx.reply('❌ Ошибка: База данных не инициализирована.');
-      }
+      if (!adminDb) return ctx.reply('❌ БД не инициализирована');
 
       try {
         const usersRef = adminDb.collection('users');
         const snapshot = await usersRef.where('tgId', '==', tgId).get();
-
         if (!snapshot.empty) {
           const batch = adminDb.batch();
-          snapshot.docs.forEach(doc => {
-            batch.update(doc.ref, {
-              isAnalysisPaid: true,
-              updatedAt: FieldValue.serverTimestamp()
-            });
-          });
+          snapshot.docs.forEach(doc => batch.update(doc.ref, { isAnalysisPaid: true, updatedAt: FieldValue.serverTimestamp() }));
           await batch.commit();
-          
-          ctx.reply(`✨ (DEV) Разблокировано документов: ${snapshot.size}. Попробуйте перезагрузить приложение.`);
-          console.log(`✅ Successfully unlocked ${snapshot.size} docs for tgId ${tgId}`);
+          ctx.reply(`✨ (DEV) Доступ разблокирован для ${snapshot.size} аккаунтов. Перезагрузите приложение.`);
         } else {
-          // List some users to debug if any exist
-          const anyUsers = await usersRef.limit(5).get();
-          const userCount = anyUsers.size;
-          ctx.reply(`⚠️ Пользователь с tgId ${tgId} не найден.\nВсего пользователей в БД: ${userCount}.\nУбедитесь, что вы запустили приложение и авторизовались.`);
-          console.log(`⚠️ No user found with tgId ${tgId}. Total users in DB: ${userCount}`);
+          ctx.reply('⚠️ Сначала авторизуйтесь в приложении.');
         }
       } catch (err) {
-        console.error('❌ Error in /unlock_me:', err);
-        ctx.reply(`❌ Ошибка при разблокировке: ${err instanceof Error ? err.message : String(err)}`);
+        ctx.reply('❌ Ошибка при разблокировке.');
       }
-    });
+    };
+
+    bot.hears('💳 Полный разбор (100₽)', buyAnalysisHandler);
+    bot.action('buy_analysis', buyAnalysisHandler);
+
+    bot.hears('🔓 DEV Разблокировка', unlockMeHandler);
+    bot.command('unlock_me', unlockMeHandler);
 
     bot.on('pre_checkout_query', (ctx) => ctx.answerPreCheckoutQuery(true));
 
@@ -227,12 +235,12 @@ async function startServer() {
     console.warn('⚠️ TELEGRAM_BOT_TOKEN is missing. Bot functionality disabled.');
   }
 
-  // API Routes
+  // API Routes - defined BEFORE Vite middleware
+  app.use(express.json());
+
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', bot_active: !!bot });
   });
-
-  app.use(express.json());
 
   app.post('/api/generate-deep-analysis', async (req, res) => {
     const { natalData, mbti } = req.body;

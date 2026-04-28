@@ -22,13 +22,22 @@ export interface AIAnalysisResponse {
 
 export async function generateDeepAnalysis(natalData: any, mbti: string): Promise<AIAnalysisResponse> {
   try {
+    console.log("🚀 Calling API: /api/generate-deep-analysis");
     const response = await fetch('/api/generate-deep-analysis', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify({ natalData, mbti }),
     });
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const text = await response.text();
+      console.error("❌ Expected JSON but got:", text.substring(0, 100));
+      throw new Error(`Server returned non-JSON response (${response.status}). Check server logs.`);
+    }
 
     if (!response.ok) {
       const errorData = await response.json();
