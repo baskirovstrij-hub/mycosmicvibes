@@ -80,8 +80,9 @@ async function startServer() {
         prices: [{ label: 'Разбор личности', amount: 100 }], // 1 RUB
         start_parameter: 'analysis_payment'
       }).catch(err => {
-        console.error('❌ Failed to send invoice:', err);
-        ctx.reply('❌ Ошибка при формировании счета. Проверьте правильность провайдер-токена в настройках.');
+        console.error('❌ Detailed Invoice Error:', err);
+        const errorMsg = err.description || err.message || 'Неизвестная ошибка';
+        ctx.reply(`❌ Ошибка при формировании счета: ${errorMsg}\n\nПроверьте, что YOOKASSA_PROVIDER_TOKEN в настройках соответствует вашему live-токену из BotFather.`);
       });
     });
 
