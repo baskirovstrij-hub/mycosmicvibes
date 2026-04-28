@@ -37,8 +37,11 @@ export async function generateDeepAnalysis(natalData: any, mbti: string): Promis
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
       const text = await response.text();
-      console.error("❌ Expected JSON from horoscope but got:", text.substring(0, 100));
-      throw new Error(`Server returned non-JSON response (${response.status}). Check server logs.`);
+      console.error("❌ Expected JSON from analysis but got:", text.substring(0, 100));
+      if (text.toLowerCase().includes("<!doctype html>") || text.toLowerCase().includes("<html")) {
+        throw new Error("Сервер вернул HTML вместо данных. Похоже, сервер перезагружается или произошла ошибка маршрутизации.");
+      }
+      throw new Error(`Server returned non-JSON response (${response.status}).`);
     }
 
     if (!response.ok) {

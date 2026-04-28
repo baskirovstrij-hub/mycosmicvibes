@@ -72,7 +72,9 @@ export async function getDailyHoroscope(natalSunLongitude: number): Promise<Horo
 
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
-      throw new Error(`Server returned non-JSON response (${response.status}). Check server logs.`);
+      const text = await response.text();
+      console.warn("⚠️ Expected JSON from horoscope but got HTML. Falling back to aspect-based logic.");
+      throw new Error(`Server returned non-JSON response (${response.status})`);
     }
 
     if (response.ok) {

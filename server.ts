@@ -61,7 +61,8 @@ if (SERVICE_ACCOUNT) {
 async function startServer() {
   const app = express();
   
-  console.log(`[INIT] GEMINI_API_KEY present: ${!!process.env.GEMINI_API_KEY}`);
+  const GENAI_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  console.log(`[INIT] AI Key present: ${!!GENAI_KEY}`);
   console.log(`[INIT] BOT_TOKEN present: ${!!process.env.TELEGRAM_BOT_TOKEN}`);
 
   // Simple request logger
@@ -245,11 +246,11 @@ async function startServer() {
   app.post('/api/generate-deep-analysis', async (req, res) => {
     console.log('📬 Received request for /api/generate-deep-analysis');
     const { natalData, mbti } = req.body;
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
     if (!GEMINI_API_KEY) {
       console.error('❌ GEMINI_API_KEY is missing in server environment');
-      return res.status(500).json({ error: 'AI key not configured on server. Please set GEMINI_API_KEY in Settings.' });
+      return res.status(500).json({ error: 'AI key not configured on server. Please set VITE_GEMINI_API_KEY in Settings.' });
     }
 
     if (!natalData || !mbti) {
@@ -258,7 +259,8 @@ async function startServer() {
 
     try {
       const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-      const modelName = "gemini-1.5-flash"; 
+      const modelName = "gemini-3-flash-preview"; 
+      console.log(`🤖 Using model: ${modelName} for deep analysis`);
       
       const sunSign = natalData.planets?.find((p: any) => p.name === 'Sun')?.sign || 'Unknown';
       const moonSign = natalData.planets?.find((p: any) => p.name === 'Moon')?.sign || 'Unknown';
@@ -320,21 +322,22 @@ MBTI: ${mbti}
   app.post('/api/generate-horoscope', async (req, res) => {
     console.log('📬 Received request for /api/generate-horoscope');
     const { signRu, transitMoonSignRu } = req.body;
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
     if (!GEMINI_API_KEY) {
       console.error('❌ Horoscope Key Error: GEMINI_API_KEY is missing on server');
-      return res.status(500).json({ error: 'AI key not configured on server. Please set GEMINI_API_KEY in Settings.' });
+      return res.status(500).json({ error: 'AI key not configured on server. Please set VITE_GEMINI_API_KEY in Settings.' });
     }
 
     try {
       const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-      const modelName = "gemini-1.5-flash";
+      const modelName = "gemini-3-flash-preview";
+      console.log(`🤖 Using model: ${modelName} for horoscope`);
 
-      const prompt = \`Сгенерируй персонализированный гороскоп на сегодня для знака \${signRu}. 
-Учти текущий транзит Луны (в знаке \${transitMoonSignRu}).
+      const prompt = `Сгенерируй персонализированный гороскоп на сегодня для знака ${signRu}. 
+Учти текущий транзит Луны (в знаке ${transitMoonSignRu}).
 Тон: мистический, глубинный, поддерживающий.
-Верни ТОЛЬКО JSON: { "vibe": "название энергии (1-2 слова)", "text": "гороскоп (2-3 предложения)" }\`;
+Верни ТОЛЬКО JSON: { "vibe": "название энергии (1-2 слова)", "text": "гороскоп (2-3 предложения)" }`;
 
       const result = await ai.models.generateContent({
         model: modelName,
@@ -344,10 +347,12 @@ MBTI: ${mbti}
         }
       });
 
-      res.json(JSON.parse(result.text || '{}'));
+      const responseText = result.text || '{}';
+      res.json(JSON.parse(responseText));
     } catch (err: any) {
       console.error('❌ Horoscope AI Error:', err);
-      res.status(500).json({ error: err.message });
+      const errorMsg = err.message || 'Internal AI error';
+      res.status(500).json({ error: errorMsg });
     }
   });
 
