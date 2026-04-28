@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 
 const PORT = 3000;
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const PAYMENT_TOKEN = process.env.YOOKASSA_PROVIDER_TOKEN;
+const PAYMENT_TOKEN = process.env.YOOKASSA_PROVIDER_TOKEN || process.env.PAYMENT_TOKEN;
 const APP_URL = process.env.VITE_APP_URL || 'https://cosmicvibes.app';
 
 // Standard Firebase Admin setup for server-side updates
@@ -60,8 +60,11 @@ async function startServer() {
 
     bot.action('buy_analysis', (ctx) => {
       if (!PAYMENT_TOKEN) {
-        return ctx.reply('⚠️ Платежная система временно недоступна (отсутствует токен ЮKassa).');
+        console.error('❌ PAYMENT_TOKEN is missing in environment variables!');
+        return ctx.reply('⚠️ Платежная система временно недоступна (отсутствует конфигурация токена).');
       }
+
+      console.log(`💳 Sending invoice to user ${ctx.from.id} using token: ${PAYMENT_TOKEN.substring(0, 5)}...`);
 
       ctx.replyWithInvoice({
         title: 'Глубокий разбор личности ✨',
