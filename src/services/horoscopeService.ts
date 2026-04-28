@@ -59,32 +59,42 @@ export async function getDailyHoroscope(natalSunLongitude: number): Promise<Horo
   const signRu = ZODIAC_SIGNS_RU[sign as keyof typeof ZODIAC_SIGNS_RU] || sign;
   const transitMoonSignRu = ZODIAC_SIGNS_RU[transitMoon.sign as keyof typeof ZODIAC_SIGNS_RU] || transitMoon.sign;
 
-  try {
-    console.log("🌠 Calling API: /api/generate-horoscope");
-    const response = await fetch('/api/generate-horoscope', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ signRu, transitMoonSignRu }),
-    });
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      const text = await response.text();
-      console.error("❌ Expected JSON from horoscope but got:", text.substring(0, 100));
-      throw new Error("Server error: received HTML instead of JSON");
+  if (GEMINI_API_KEY) {
+    try {
+      const { GoogleGenAI } = await import("@google/genai");
+      const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+      const modelName = "gemini-3-flash-preview";
+
+      const prompt = `Сгенерируй персонализированный гороскоп на сегодня для знака ${signRu}. 
+Учти текущий транзит Луны (в знаке ${transitMoonSignRu}).
+Тон: мистический, глубинный, поддерживающий.
+Верни ТОЛЬКО JSON: { "vibe": "название энергии (1-2 слова)", "text": "гороскоп (2-3 предложения)" }`;
+
+      const result = await ai.models.generateContent({
+        model: modelName,
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          responseMimeType: "application/json",
+        }
+      });
+
+      if (result.text) {
+        const data = JSON.parse(result.text);
+        return {
+          type: 'neutral',
+          text: data.text,
+          vibe: data.vibe
+        };
+      }
+    } catch (error) {
+      console.error("Client-side horoscope generation error:", error);
     }
-
-    if (!response.ok) throw new Error('Server error');
-    
-    return await response.json();
-  } catch (error) {
-    console.error("Horoscope generation error:", error);
   }
 
-  // Fallback to aspect-based logic
+  // Fallback to aspect-based logic if AI fails or no key
+  console.log("🌌 Using aspect-based fallback for horoscope");
   const diff = Math.abs(transitMoon.longitude - natalSunLongitude);
   const angle = diff > 180 ? 360 - diff : diff;
   
