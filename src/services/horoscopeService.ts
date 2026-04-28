@@ -59,13 +59,13 @@ export async function getDailyHoroscope(natalSunLongitude: number): Promise<Horo
   const signRu = ZODIAC_SIGNS_RU[sign as keyof typeof ZODIAC_SIGNS_RU] || sign;
   const transitMoonSignRu = ZODIAC_SIGNS_RU[transitMoon.sign as keyof typeof ZODIAC_SIGNS_RU] || transitMoon.sign;
 
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
 
   if (GEMINI_API_KEY) {
     try {
       const { GoogleGenAI } = await import("@google/genai");
       const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-      const modelName = "gemini-3-flash-preview";
+      const modelName = "gemini-1.5-flash";
 
       const prompt = `Сгенерируй персонализированный гороскоп на сегодня для знака ${signRu}. 
 Учти текущий транзит Луны (в знаке ${transitMoonSignRu}).

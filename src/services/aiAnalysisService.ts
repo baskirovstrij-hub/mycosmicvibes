@@ -23,16 +23,16 @@ export interface AIAnalysisResponse {
 }
 
 export async function generateDeepAnalysis(natalData: any, mbti: string): Promise<AIAnalysisResponse> {
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
 
   if (!GEMINI_API_KEY) {
     console.error("❌ GEMINI_API_KEY is missing in client environment");
-    throw new Error("Конфигурация AI не найдена. Пожалуйста, убедитесь, что GEMINI_API_KEY установлен в настройках приложения.");
+    throw new Error("Конфигурация AI не найдена. Пожалуйста, убедитесь, что VITE_GEMINI_API_KEY установлен в настройках приложения.");
   }
 
   try {
     const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-    const modelName = "gemini-3-flash-preview";
+    const modelName = "gemini-1.5-flash";
     
     const sunSign = natalData.planets?.find((p: any) => p.name === 'Sun')?.sign || 'Unknown';
     const moonSign = natalData.planets?.find((p: any) => p.name === 'Moon')?.sign || 'Unknown';
@@ -92,7 +92,7 @@ MBTI: ${mbti}
   } catch (error: any) {
     console.error("AI Analysis error details:", error);
     if (error.message?.includes("API key not valid")) {
-      throw new Error("Ошибка конфигурации API ключа. Убедитесь, что GEMINI_API_KEY установлен правильно.");
+      throw new Error("Ошибка конфигурации API ключа. Убедитесь, что VITE_GEMINI_API_KEY установлен.");
     }
     throw error;
   }
