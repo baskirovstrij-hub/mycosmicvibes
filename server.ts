@@ -60,20 +60,28 @@ async function startServer() {
 
     bot.action('buy_analysis', (ctx) => {
       if (!PAYMENT_TOKEN) {
-        console.error('❌ PAYMENT_TOKEN is missing in environment variables!');
+        console.error('❌ PAYMENT_TOKEN is missing!');
         return ctx.reply('⚠️ Платежная система временно недоступна (отсутствует конфигурация токена).');
       }
 
-      console.log(`💳 Sending invoice to user ${ctx.from.id} using token: ${PAYMENT_TOKEN.substring(0, 5)}...`);
+      const timestamp = Date.now();
+      const payload = `paid_analysis_${ctx.from.id}_${timestamp}`;
+      
+      console.log(`💳 Generating fresh invoice for user ${ctx.from.id}`);
+      console.log(`🔹 Token: ${PAYMENT_TOKEN.substring(0, 10)}...`);
+      console.log(`🔹 Payload: ${payload}`);
 
       ctx.replyWithInvoice({
         title: 'Глубокий разбор личности ✨',
         description: 'Полный синтез твоей натальной карты и психологического типа личности от ИИ.',
-        payload: `paid_analysis_${ctx.from.id}`,
+        payload: payload,
         provider_token: PAYMENT_TOKEN,
         currency: 'RUB',
         prices: [{ label: 'Разбор личности', amount: 10000 }], // 100 RUB
         start_parameter: 'analysis_payment'
+      }).catch(err => {
+        console.error('❌ Failed to send invoice:', err);
+        ctx.reply('❌ Ошибка при формировании счета. Проверьте правильность провайдер-токена в настройках.');
       });
     });
 
