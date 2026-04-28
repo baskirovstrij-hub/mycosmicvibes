@@ -236,29 +236,31 @@ async function startServer() {
   }
 
   // API Routes - defined BEFORE Vite middleware
-  app.use(express.json());
+  app.use(express.json({ limit: '1mb' }));
 
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', bot_active: !!bot });
   });
 
   app.post('/api/generate-deep-analysis', async (req, res) => {
+    console.log('📬 Received request for /api/generate-deep-analysis');
     const { natalData, mbti } = req.body;
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
     if (!GEMINI_API_KEY) {
       console.error('❌ GEMINI_API_KEY is missing in server environment');
-      return res.status(500).json({ error: 'AI key not configured on server' });
+      return res.status(500).json({ error: 'AI key not configured on server. Please set GEMINI_API_KEY in Settings.' });
     }
 
     if (!natalData || !mbti) {
-      return res.status(400).json({ error: 'Missing natalData or mbti' });
+      return res.status(400).json({ error: 'Missing natalData or mbti in request body' });
     }
 
     try {
       const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
       
-      // Extract key elements for the prompt
+      const modelName = "gemini-1.5-flash"; 
+      console.log(`🤖 Using model: ${modelName}`);
       const sunSign = natalData.planets?.find((p: any) => p.name === 'Sun')?.sign || 'Unknown';
       const moonSign = natalData.planets?.find((p: any) => p.name === 'Moon')?.sign || 'Unknown';
       const ascendantSign = natalData.ascendant?.sign || 'Unknown';
@@ -351,7 +353,7 @@ MBTI: ${mbti}
       };
 
       const result = await ai.models.generateContent({
-        model: "gemini-2.0-flash", // Use 2.0 Flash as it is modern and fast
+        model: modelName,
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
           responseMimeType: "application/json",
@@ -368,10 +370,12 @@ MBTI: ${mbti}
   });
 
   app.post('/api/generate-horoscope', async (req, res) => {
+    console.log('📬 Received request for /api/generate-horoscope');
     const { signRu, transitMoonSignRu } = req.body;
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
     if (!GEMINI_API_KEY) {
+      console.error('❌ Horoscope Key Error: GEMINI_API_KEY is missing');
       return res.status(500).json({ error: 'AI key not configured on server' });
     }
 
@@ -395,7 +399,7 @@ Max length: 200 characters. Обращайся к пользователю на 
       };
 
       const result = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-1.5-flash",
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
           responseMimeType: "application/json",
@@ -403,6 +407,7 @@ Max length: 200 characters. Обращайся к пользователю на 
         }
       });
 
+      console.log('✅ Horoscope generated successfully');
       res.json(JSON.parse(result.text || '{}'));
     } catch (err: any) {
       console.error('❌ Horoscope AI Error:', err);
