@@ -52,7 +52,7 @@ async function startServer() {
           [Markup.button.webApp('🚀 Запустить CosmicVibes', APP_URL)],
           [
             Markup.button.callback('✨ О функционале', 'about_features'),
-            Markup.button.callback('💳 Полный разбор (1₽)', 'buy_analysis')
+            Markup.button.callback('💳 Полный разбор (100₽)', 'buy_analysis')
           ]
         ])
       );
@@ -72,7 +72,7 @@ async function startServer() {
         payload: `paid_analysis_${ctx.from.id}`,
         provider_token: PAYMENT_TOKEN,
         currency: 'RUB',
-        prices: [{ label: 'Разбор личности', amount: 100 }], // 1 RUB
+        prices: [{ label: 'Разбор личности', amount: 10000 }], // 100 RUB
         start_parameter: 'analysis_payment'
       });
     });
@@ -128,7 +128,7 @@ async function startServer() {
       ctx.reply(
         '🎁 Базовый функционал доступен бесплатно!\n\n' +
         'Для тех, кто хочет пойти глубже, у нас есть "Глубокий разбор личности" от ИИ, который синтезирует данные астрологии и психологии.\n\n' +
-        '💳 Стоимость полного разбора: 1₽.\n' +
+        '💳 Стоимость полного разбора: 100₽.\n' +
         'Оплата производится внутри приложения через безопасные платежные системы.',
         Markup.inlineKeyboard([
           [Markup.button.webApp('🚀 Перейти к оплате в приложении', APP_URL)]

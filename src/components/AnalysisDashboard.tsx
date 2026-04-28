@@ -71,7 +71,7 @@ export default function AnalysisDashboard() {
 
          <div className="flex flex-col items-center gap-6 w-full max-w-xs">
             <div className="w-full p-6 bg-white/5 border border-white/10 rounded-3xl space-y-4 text-center">
-               <div className="text-emerald-500 font-light text-4xl tracking-tighter italic">1₽</div>
+               <div className="text-emerald-500 font-light text-4xl tracking-tighter italic">100₽</div>
                <div className="text-gray-500 text-[10px] uppercase tracking-[0.2em] font-medium">Единоразовый доступ</div>
             </div>
 
