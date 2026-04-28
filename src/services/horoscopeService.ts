@@ -59,38 +59,34 @@ export async function getDailyHoroscope(natalSunLongitude: number): Promise<Horo
   const signRu = ZODIAC_SIGNS_RU[sign as keyof typeof ZODIAC_SIGNS_RU] || sign;
   const transitMoonSignRu = ZODIAC_SIGNS_RU[transitMoon.sign as keyof typeof ZODIAC_SIGNS_RU] || transitMoon.sign;
 
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+  try {
+    console.log("🌠 Calling API: /api/generate-horoscope");
+    const response = await fetch('/api/generate-horoscope', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ signRu, transitMoonSignRu }),
+    });
 
-  if (GEMINI_API_KEY) {
-    try {
-      const { GoogleGenAI } = await import("@google/genai");
-      const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-      const modelName = "gemini-1.5-flash";
-
-      const prompt = `Сгенерируй персонализированный гороскоп на сегодня для знака ${signRu}. 
-Учти текущий транзит Луны (в знаке ${transitMoonSignRu}).
-Тон: мистический, глубинный, поддерживающий.
-Верни ТОЛЬКО JSON: { "vibe": "название энергии (1-2 слова)", "text": "гороскоп (2-3 предложения)" }`;
-
-      const result = await ai.models.generateContent({
-        model: modelName,
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
-          responseMimeType: "application/json",
-        }
-      });
-
-      if (result.text) {
-        const data = JSON.parse(result.text);
-        return {
-          type: 'neutral',
-          text: data.text,
-          vibe: data.vibe
-        };
-      }
-    } catch (error) {
-      console.error("Client-side horoscope generation error:", error);
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error(`Server returned non-JSON response (${response.status}). Check server logs.`);
     }
+
+    if (response.ok) {
+      const data = await response.json();
+      return {
+        type: data.type || 'neutral',
+        text: data.text,
+        vibe: data.vibe
+      };
+    } else {
+      console.error("Horoscope API error:", await response.text());
+    }
+  } catch (error) {
+    console.error("Server-side horoscope generation error:", error);
   }
 
   // Fallback to aspect-based logic if AI fails or no key
