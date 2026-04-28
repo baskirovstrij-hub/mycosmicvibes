@@ -39,6 +39,14 @@ export function useAuth() {
             const data = snap.data();
             setProfile(data);
             
+            // Sync tgId if it was missing but available now
+            if (tgUser && data.tgId !== tgUser.id.toString()) {
+              updateDoc(userDoc, { 
+                tgId: tgUser.id.toString(),
+                updatedAt: serverTimestamp() 
+              }).catch(console.error);
+            }
+            
             // Sync large data to store only if not already present
             if (data.userData && !useUserStore.getState().userData) setUserData(data.userData);
             if (data.natalData && !useUserStore.getState().natalData) setNatalData(data.natalData);
