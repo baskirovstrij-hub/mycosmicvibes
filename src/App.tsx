@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useMemo, memo } from 'react';
+import { useState, useMemo, memo, useEffect } from 'react';
 import Layout from './components/Layout';
 import Home from './components/Home';
 import Header from './components/Header';
@@ -77,15 +77,34 @@ const AnalysisBackground = memo(({ stars }: { stars: any[] }) => (
 
 export default function App() {
   const { tg, user: tgUser } = useTelegram();
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   useUserSync();
   const [mode, setMode] = useState<AppMode>('home');
   const { natalData } = useUserStore();
+  const [quotaExceeded, setQuotaExceeded] = useState(false);
+
+  // Catch Quota/Firebase errors globally
+  useEffect(() => {
+    const handleError = (event: ErrorEvent | PromiseRejectionEvent) => {
+      const msg = (event instanceof ErrorEvent ? event.message : (event as any).reason?.message) || '';
+      console.log("Global Error Caught:", msg);
+      if (msg.includes('permission-denied') || msg.includes('resource-exhausted') || msg.includes('Quota') || msg.includes('quota')) {
+        setQuotaExceeded(true);
+      }
+    };
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleError);
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleError);
+    };
+  }, []);
 
   const { synastryResult, setSynastryResult, reset } = useSynastryStore();
   const [loading, setLoading] = useState(false);
 
   const navigateTo = (newMode: AppMode) => {
+    console.log("Navigating to mode:", newMode);
     // For legacy compatibility during migration
     if ((newMode as any) === 'form' || (newMode as any) === 'mbti') {
       setMode('experience');
@@ -184,10 +203,39 @@ export default function App() {
 
   const isScrollLocked = mode === 'home' || ((mode === 'experience' || mode === 'analysis') && !natalData);
 
+  if (authLoading && !quotaExceeded) {
+    return (
+      <Layout>
+        <div className="fixed inset-0 bg-[#020205] flex flex-col items-center justify-center space-y-4">
+          <motion.div 
+            animate={{ rotate: 360 }}
+            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            className="w-12 h-12 border-2 border-purple-500/20 border-t-purple-500 rounded-full"
+          />
+          <p className="text-gray-500 text-[10px] uppercase tracking-[0.3em] animate-pulse">Синхронизация со звездами...</p>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <Header onNavigate={(m) => navigateTo(m as AppMode)} currentMode={mode} hasUserData={!!natalData} />
       
+      {quotaExceeded && (
+        <div className="fixed top-0 left-0 w-full z-[100] bg-amber-500/90 backdrop-blur-md py-2 px-4 flex items-center justify-between">
+          <p className="text-black text-[10px] md:text-xs font-medium uppercase tracking-[0.1em]">
+            Превышен лимит запросов к базе данных. Приложение работает в автономном режиме.
+          </p>
+          <button 
+            onClick={() => setQuotaExceeded(false)}
+            className="text-black/60 hover:text-black font-bold p-1"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <main 
         className={`flex-1 min-h-0 w-full relative scroll-smooth ${isScrollLocked ? 'overflow-hidden flex flex-col' : 'overflow-y-auto overflow-x-hidden pt-16 md:pt-20 pb-20'}`}
         style={{ WebkitOverflowScrolling: 'touch' }}

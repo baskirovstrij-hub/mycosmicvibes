@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { auth, db } from '../lib/firebase';
+import { useEffect, useState, useRef } from 'react';
+import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { signInAnonymously, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { useTelegram } from './useTelegram';
@@ -10,6 +10,9 @@ export function useAuth() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const loadingRef = useRef(loading);
+  loadingRef.current = loading;
+  
   const { setUserData, setNatalData, setMbtiData, setAnalysisData } = useUserStore();
 
   useEffect(() => {
@@ -20,11 +23,11 @@ export function useAuth() {
 
       // Fallback timeout in case Firebase is stuck or quota exceeded
       const authTimeout = setTimeout(() => {
-        if (loading) {
+        if (loadingRef.current) {
           console.warn("Auth sync timed out, potentially due to Firebase limits. Proceeding with local state.");
           setLoading(false);
         }
-      }, 6000);
+      }, 7000);
 
       if (firebaseUser) {
         const userDoc = doc(db, 'users', firebaseUser.uid);
@@ -49,13 +52,15 @@ export function useAuth() {
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp()
             };
-            setDoc(userDoc, newProfile);
+            setDoc(userDoc, newProfile).catch(err => {
+               handleFirestoreError(err, OperationType.WRITE, `users/${firebaseUser.uid}`);
+            });
           }
           setLoading(false);
         }, (error) => {
           clearTimeout(authTimeout);
-          console.error("Profile sync error (likely Quota Exceeded):", error);
           setLoading(false);
+          handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
         });
 
         setUser(firebaseUser);
@@ -78,6 +83,7 @@ export function useAuth() {
 
   const updateProfile = async (data: any) => {
     if (!user) return;
+    const path = `users/${user.uid}`;
     const userDoc = doc(db, 'users', user.uid);
     
     // Filter out undefined keys
@@ -85,10 +91,14 @@ export function useAuth() {
       Object.entries(data).filter(([_, v]) => v !== undefined)
     );
 
-    await updateDoc(userDoc, {
-      ...cleanData,
-      updatedAt: serverTimestamp()
-    });
+    try {
+      await updateDoc(userDoc, {
+        ...cleanData,
+        updatedAt: serverTimestamp()
+      });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, path);
+    }
   };
 
   return { user, profile, loading, updateProfile };
