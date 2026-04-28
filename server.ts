@@ -60,6 +60,15 @@ if (SERVICE_ACCOUNT) {
 
 async function startServer() {
   const app = express();
+  
+  console.log(`[INIT] GEMINI_API_KEY present: ${!!process.env.GEMINI_API_KEY}`);
+  console.log(`[INIT] BOT_TOKEN present: ${!!process.env.TELEGRAM_BOT_TOKEN}`);
+
+  // Simple request logger
+  app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+  });
 
   // Initialize Telegram Bot
   let bot: Telegraf | null = null;
@@ -391,6 +400,12 @@ Max length: 200 characters. Обращайся к пользователю на 
       console.error('❌ Horoscope AI Error:', err);
       res.status(500).json({ error: err.message });
     }
+  });
+
+  // Catch-all for API routes to avoid returning HTML
+  app.all('/api/*', (req, res) => {
+    console.warn(`[${new Date().toISOString()}] 404 API Not Found: ${req.method} ${req.url}`);
+    res.status(404).json({ error: `API route ${req.method} ${req.url} not found` });
   });
 
   // Vite integration
