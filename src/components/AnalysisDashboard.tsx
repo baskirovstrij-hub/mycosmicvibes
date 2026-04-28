@@ -13,6 +13,13 @@ export default function AnalysisDashboard() {
   const [confirmed, setConfirmed] = useState(false);
 
   const isPaid = profile?.isAnalysisPaid === true;
+
+  useEffect(() => {
+    if (profile?.isAnalysisPaid) {
+       console.log("✅ Payment detected in dashboard profile", profile.isAnalysisPaid);
+    }
+  }, [profile?.isAnalysisPaid]);
+
   const activeAnalysis = profile?.analysisData || analysisData;
 
   const handleGenerate = async () => {

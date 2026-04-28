@@ -37,6 +37,7 @@ export function useAuth() {
           clearTimeout(authTimeout);
           if (snap.exists()) {
             const data = snap.data();
+            console.log(`👤 Profile Load: uid=${firebaseUser.uid}, tgId=${data.tgId}, paid=${data.isAnalysisPaid}`);
             setProfile(data);
             
             // Sync tgId if it was missing but available now

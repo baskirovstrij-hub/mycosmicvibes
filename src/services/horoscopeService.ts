@@ -1,4 +1,3 @@
-import { GoogleGenAI, Type } from "@google/genai";
 import { calculateTransitMoon } from './astrologyService';
 
 interface HoroscopeTip {
@@ -58,34 +57,20 @@ export async function getDailyHoroscope(natalSunLongitude: number): Promise<Horo
   const transitMoon = await calculateTransitMoon(new Date());
   const sign = getZodiacSign(natalSunLongitude);
   const signRu = ZODIAC_SIGNS_RU[sign as keyof typeof ZODIAC_SIGNS_RU] || sign;
+  const transitMoonSignRu = ZODIAC_SIGNS_RU[transitMoon.sign as keyof typeof ZODIAC_SIGNS_RU] || transitMoon.sign;
 
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `Сгенерируй персонализированный гороскоп на сегодня для знака ${signRu}. 
-      Учти текущий транзит Луны (в знаке ${ZODIAC_SIGNS_RU[transitMoon.sign as keyof typeof ZODIAC_SIGNS_RU]}).
-      
-      Стиль: эзотерический, вдохновляющий, глубокий, в духе CosmicVibes.
-      Max length: 200 characters.`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            text: { type: Type.STRING, description: "Текст гороскопа" },
-            vibe: { type: Type.STRING, description: "Короткая фраза - вайб дня (2-3 слова)" },
-            type: { type: Type.STRING, enum: ['positive', 'neutral', 'negative'], description: "Общий характер дня" }
-          },
-          required: ["text", "vibe", "type"]
-        }
-      }
+    const response = await fetch('/api/generate-horoscope', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ signRu, transitMoonSignRu }),
     });
 
-    const result = JSON.parse(response.text || '{}');
-    if (result.text && result.vibe && result.type) {
-      return result as HoroscopeTip;
-    }
+    if (!response.ok) throw new Error('Server error');
+    
+    return await response.json();
   } catch (error) {
     console.error("Horoscope generation error:", error);
   }

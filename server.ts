@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { Telegraf, Markup } from 'telegraf';
 import dotenv from 'dotenv';
+import { GoogleGenAI, Type } from "@google/genai";
 
 dotenv.config();
 
@@ -118,21 +119,30 @@ async function startServer() {
 
       try {
         const usersRef = adminDb.collection('users');
-        const snapshot = await usersRef.where('tgId', '==', tgId).limit(1).get();
+        const snapshot = await usersRef.where('tgId', '==', tgId).get();
 
         if (!snapshot.empty) {
-          const userDoc = snapshot.docs[0];
-          await userDoc.ref.update({
-            isAnalysisPaid: true,
-            updatedAt: FieldValue.serverTimestamp()
+          const batch = adminDb.batch();
+          snapshot.docs.forEach(doc => {
+            batch.update(doc.ref, {
+              isAnalysisPaid: true,
+              updatedAt: FieldValue.serverTimestamp()
+            });
           });
-          ctx.reply('✨ (DEV) Глубокий разбор личности успешно разблокирован для вашего аккаунта!');
+          await batch.commit();
+          
+          ctx.reply(`✨ (DEV) Разблокировано документов: ${snapshot.size}. Попробуйте перезагрузить приложение.`);
+          console.log(`✅ Successfully unlocked ${snapshot.size} docs for tgId ${tgId}`);
         } else {
-          ctx.reply('⚠️ Пользователь не найден в базе данных. Пожалуйста, сначала запустите приложение и авторизуйтесь.');
+          // List some users to debug if any exist
+          const anyUsers = await usersRef.limit(5).get();
+          const userCount = anyUsers.size;
+          ctx.reply(`⚠️ Пользователь с tgId ${tgId} не найден.\nВсего пользователей в БД: ${userCount}.\nУбедитесь, что вы запустили приложение и авторизовались.`);
+          console.log(`⚠️ No user found with tgId ${tgId}. Total users in DB: ${userCount}`);
         }
       } catch (err) {
         console.error('❌ Error in /unlock_me:', err);
-        ctx.reply('❌ Произошла ошибка при разблокировке.');
+        ctx.reply(`❌ Ошибка при разблокировке: ${err instanceof Error ? err.message : String(err)}`);
       }
     });
 
@@ -211,6 +221,176 @@ async function startServer() {
   // API Routes
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', bot_active: !!bot });
+  });
+
+  app.use(express.json());
+
+  app.post('/api/generate-deep-analysis', async (req, res) => {
+    const { natalData, mbti } = req.body;
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+    if (!GEMINI_API_KEY) {
+      console.error('❌ GEMINI_API_KEY is missing in server environment');
+      return res.status(500).json({ error: 'AI key not configured on server' });
+    }
+
+    if (!natalData || !mbti) {
+      return res.status(400).json({ error: 'Missing natalData or mbti' });
+    }
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+      
+      // Extract key elements for the prompt
+      const sunSign = natalData.planets?.find((p: any) => p.name === 'Sun')?.sign || 'Unknown';
+      const moonSign = natalData.planets?.find((p: any) => p.name === 'Moon')?.sign || 'Unknown';
+      const ascendantSign = natalData.ascendant?.sign || 'Unknown';
+      const saturnSign = natalData.planets?.find((p: any) => p.name === 'Saturn')?.sign || 'Unknown';
+      const plutoSign = natalData.planets?.find((p: any) => p.name === 'Pluto')?.sign || 'Unknown';
+
+      const prompt = `
+Вы — ведущий астропсихолог, помогающий девушке/женщине осознать ее жизненный путь.
+Составьте "Интеллектуальную карту личности", объединяя астрологию (Натальную карту) и MBTI.
+
+ДАННЫЕ ПОЛЬЗОВАТЕЛЯ:
+MBTI: ${mbti}
+Солнце: ${sunSign}
+Луна: ${moonSign}
+Асцендент: ${ascendantSign}
+Сатурн: ${saturnSign}
+Плутон: ${plutoSign}
+
+ВАЖНЫЕ ПРАВИЛА И ТОН:
+- Ваша целевая аудитория: девушки и молодые женщины, которые ищут смыслы.
+- Тон: Глубинный, астропсихологический, мистический, поддерживающий, но структурированный. Никакой излишней "воды", баланс "Структура (Dashboard) + Наполнение (Storytelling)".
+- Обращайтесь к пользователю на "вы", уважительно и поддерживающе.
+- Формат: Верните ТОЛЬКО валидный JSON с указанной структурой.
+
+СТРУКТУРА ОТВЕТА (JSON):
+"core": 
+  "title": Креативное название (например, "Душевный Стратег"). НЕ используйте слова "Ядро" или "Разбор" в этом заголовке.
+  "text": Синтез Солнца (${sunSign}) и доминирующих функций MBTI (${mbti}). Короткий, емкий нарратив о том, как она воспринимает мир и в чем её истинная природа.
+
+"shadow": 
+  "title": "Социальная маска и Тень",
+  "text": Асцендент (${ascendantSign}) (как её видят другие) + слабые функции MBTI (что она в себе отрицает или скрывает). Контрастный анализ внутреннего и внешнего.
+
+"growth":
+  "title": "Двигатель прогресса",
+  "points": 3 пункта развития на основе Сатурна (${saturnSign}) и Плутона (${plutoSign}) + точки роста ${mbti}.
+    В каждом пункте строго: "thesis" (Тезис), "cause" (Причина), "solution" (Решение/Рекомендация).
+
+"summary":
+  "text": Финальный вывод на один абзац в стиле сторителлинга. "Ваша история — это путь от [X] к [Y]..."
+`;
+
+      const responseSchema = {
+        type: Type.OBJECT,
+        properties: {
+          core: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              text: { type: Type.STRING }
+            },
+            required: ["title", "text"]
+          },
+          shadow: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              text: { type: Type.STRING }
+            },
+            required: ["title", "text"]
+          },
+          growth: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              points: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    thesis: { type: Type.STRING },
+                    cause: { type: Type.STRING },
+                    solution: { type: Type.STRING }
+                  },
+                  required: ["thesis", "cause", "solution"]
+                }
+              }
+            },
+            required: ["title", "points"]
+          },
+          summary: {
+            type: Type.OBJECT,
+            properties: {
+              text: { type: Type.STRING }
+            },
+            required: ["text"]
+          }
+        },
+        required: ["core", "shadow", "growth", "summary"]
+      };
+
+      const result = await ai.models.generateContent({
+        model: "gemini-2.0-flash", // Use 2.0 Flash as it is modern and fast
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: responseSchema,
+        }
+      });
+
+      const responseText = result.text;
+      res.json(JSON.parse(responseText || '{}'));
+    } catch (err: any) {
+      console.error('❌ Gemini Error on server:', err);
+      res.status(500).json({ error: err.message || 'Internal server error while generating analysis' });
+    }
+  });
+
+  app.post('/api/generate-horoscope', async (req, res) => {
+    const { signRu, transitMoonSignRu } = req.body;
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+    if (!GEMINI_API_KEY) {
+      return res.status(500).json({ error: 'AI key not configured on server' });
+    }
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+
+      const prompt = `Сгенерируй персонализированный гороскоп на сегодня для знака ${signRu}. 
+Учти текущий транзит Луны (в знаке ${transitMoonSignRu}).
+
+Стиль: эзотерический, вдохновляющий, глубокий, в духе CosmicVibes.
+Max length: 200 characters. Обращайся к пользователю на ты.`;
+
+      const responseSchema = {
+        type: Type.OBJECT,
+        properties: {
+          text: { type: Type.STRING, description: "Текст гороскопа" },
+          vibe: { type: Type.STRING, description: "Короткая фраза - вайб дня (2-3 слова)" },
+          type: { type: Type.STRING, enum: ['positive', 'neutral', 'negative'], description: "Общий характер дня" }
+        },
+        required: ["text", "vibe", "type"]
+      };
+
+      const result = await ai.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: responseSchema,
+        }
+      });
+
+      res.json(JSON.parse(result.text || '{}'));
+    } catch (err: any) {
+      console.error('❌ Horoscope AI Error:', err);
+      res.status(500).json({ error: err.message });
+    }
   });
 
   // Vite integration
