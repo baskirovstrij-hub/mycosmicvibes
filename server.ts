@@ -17,7 +17,7 @@ const APP_URL = process.env.VITE_APP_URL || 'https://cosmicvibes.app';
 
 // Standard Firebase Admin setup for server-side updates
 import { initializeApp, cert } from 'firebase-admin/app';
-import { getFirestore as getAdminFirestore } from 'firebase-admin/firestore';
+import { getFirestore as getAdminFirestore, FieldValue } from 'firebase-admin/firestore';
 
 // Initialize Firebase Admin (requires service account)
 const SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT;
@@ -52,7 +52,7 @@ async function startServer() {
           [Markup.button.webApp('🚀 Запустить CosmicVibes', APP_URL)],
           [
             Markup.button.callback('✨ О функционале', 'about_features'),
-            Markup.button.callback('💳 Полный разбор (1₽)', 'buy_analysis')
+            Markup.button.callback('💳 Полный разбор (100₽)', 'buy_analysis')
           ]
         ])
       );
@@ -77,13 +77,42 @@ async function startServer() {
         payload: payload,
         provider_token: PAYMENT_TOKEN,
         currency: 'RUB',
-        prices: [{ label: 'Разбор личности', amount: 100 }], // 1 RUB
+        prices: [{ label: 'Разбор личности', amount: 10000 }], // 100 RUB (Minimum for Live)
         start_parameter: 'analysis_payment'
       }).catch(err => {
         console.error('❌ Detailed Invoice Error:', err);
         const errorMsg = err.description || err.message || 'Неизвестная ошибка';
-        ctx.reply(`❌ Ошибка при формировании счета: ${errorMsg}\n\nПроверьте, что YOOKASSA_PROVIDER_TOKEN в настройках соответствует вашему live-токену из BotFather.`);
+        ctx.reply(`❌ Ошибка при формировании счета: ${errorMsg}\n\n⚠️ Обратите внимание: для Live-платежей минимальная сумма обычно 100₽. Если вы тестируете, используйте тестовый токен в настройках.`);
       });
+    });
+
+    // Secret command for developer to bypass payment during testing
+    bot.command('unlock_me', async (ctx) => {
+      const tgId = ctx.from.id.toString();
+      console.log(`🔑 Developer bypass for testing: unlocking analysis for ${tgId}`);
+      
+      if (!adminDb) {
+        return ctx.reply('❌ Ошибка: База данных не инициализирована.');
+      }
+
+      try {
+        const usersRef = adminDb.collection('users');
+        const snapshot = await usersRef.where('tgId', '==', tgId).limit(1).get();
+
+        if (!snapshot.empty) {
+          const userDoc = snapshot.docs[0];
+          await userDoc.ref.update({
+            isAnalysisPaid: true,
+            updatedAt: FieldValue.serverTimestamp()
+          });
+          ctx.reply('✨ (DEV) Глубокий разбор личности успешно разблокирован для вашего аккаунта!');
+        } else {
+          ctx.reply('⚠️ Пользователь не найден в базе данных. Пожалуйста, сначала запустите приложение и авторизуйтесь.');
+        }
+      } catch (err) {
+        console.error('❌ Error in /unlock_me:', err);
+        ctx.reply('❌ Произошла ошибка при разблокировке.');
+      }
     });
 
     bot.on('pre_checkout_query', (ctx) => ctx.answerPreCheckoutQuery(true));
@@ -101,7 +130,7 @@ async function startServer() {
             const userDoc = snapshot.docs[0];
             await userDoc.ref.update({
               isAnalysisPaid: true,
-              updatedAt: adminDb.FieldValue.serverTimestamp()
+              updatedAt: FieldValue.serverTimestamp()
             });
             console.log(`✅ Статус оплаты обновлен для пользователя ${tgId}`);
             ctx.reply('🎉 Оплата прошла успешно! Теперь тебе доступен полный разбор в приложении.');
@@ -137,7 +166,7 @@ async function startServer() {
       ctx.reply(
         '🎁 Базовый функционал доступен бесплатно!\n\n' +
         'Для тех, кто хочет пойти глубже, у нас есть "Глубокий разбор личности" от ИИ, который синтезирует данные астрологии и психологии.\n\n' +
-        '💳 Стоимость полного разбора: 1₽.\n' +
+        '💳 Стоимость полного разбора: 100₽.\n' +
         'Оплата производится внутри приложения через безопасные платежные системы.',
         Markup.inlineKeyboard([
           [Markup.button.webApp('🚀 Перейти к оплате в приложении', APP_URL)]
