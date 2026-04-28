@@ -1,3 +1,4 @@
+import fs from 'fs';
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
@@ -26,11 +27,31 @@ let adminDb: any = null;
 if (SERVICE_ACCOUNT) {
   try {
     const serviceAccount = JSON.parse(SERVICE_ACCOUNT);
+    let dbId = '(default)';
+    
+    try {
+      const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
+      if (fs.existsSync(configPath)) {
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        if (config.firestoreDatabaseId) {
+          dbId = config.firestoreDatabaseId;
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ Could not read firebase-applet-config.json, using fallback');
+      dbId = 'ai-studio-c0d869ee-b27d-4fcd-b189-1349543c59f5';
+    }
+    
+    if (process.env.FIRESTORE_DATABASE_ID) {
+      dbId = process.env.FIRESTORE_DATABASE_ID;
+    }
+
     initializeApp({
       credential: cert(serviceAccount)
     });
-    adminDb = getAdminFirestore();
-    console.log('✅ Firebase Admin initialized');
+    
+    adminDb = getAdminFirestore(dbId);
+    console.log(`✅ Firebase Admin initialized with database: ${dbId}`);
   } catch (err) {
     console.error('❌ Failed to initialize Firebase Admin:', err);
   }
