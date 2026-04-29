@@ -60,6 +60,14 @@ if (SERVICE_ACCOUNT) {
 
 async function startServer() {
   const app = express();
+
+  process.on('uncaughtException', (err) => {
+    console.error('🔥 FATAL UNCAUGHT EXCEPTION:', err);
+  });
+  
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('🔥 FATAL UNHANDLED REJECTION at:', promise, 'reason:', reason);
+  });
   
   const GENAI_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
   console.log(`[INIT] AI Key present: ${!!GENAI_KEY}`);
@@ -138,6 +146,9 @@ MBTI: ${mbti}
   "text": Итоговая вдохновляющая цитата-резюме (1-2 предложения), которая ставит точку в этом разборе.
 `;
 
+      console.log(`[Deep Analysis] Starting Gemini generation request...`);
+      const startTime = Date.now();
+      
       const result = await ai.models.generateContent({
         model: modelName,
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
@@ -146,6 +157,8 @@ MBTI: ${mbti}
         }
       });
 
+      const elapsed = Date.now() - startTime;
+      console.log(`[Deep Analysis] Gemini generation successful! Took ${elapsed}ms`);
       const responseText = result.text;
       res.json(JSON.parse(responseText || '{}'));
     } catch (err: any) {
