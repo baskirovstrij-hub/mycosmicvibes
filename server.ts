@@ -92,10 +92,9 @@ async function startServer() {
     }
 
     try {
-      const ai = new GoogleGenAI(GEMINI_API_KEY);
+      const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
       const modelName = "gemini-1.5-flash"; 
       console.log(`🤖 Using model: ${modelName} for deep analysis`);
-      const model = ai.getGenerativeModel({ model: modelName });
       
       const sunSign = natalData.planets?.find((p: any) => p.name === 'Sun')?.sign || 'Unknown';
       const moonSign = natalData.planets?.find((p: any) => p.name === 'Moon')?.sign || 'Unknown';
@@ -139,14 +138,15 @@ MBTI: ${mbti}
   "text": Итоговая вдохновляющая цитата-резюме (1-2 предложения), которая ставит точку в этом разборе.
 `;
 
-      const result = await model.generateContent({
+      const result = await ai.models.generateContent({
+        model: modelName,
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
+        config: {
           responseMimeType: "application/json",
         }
       });
 
-      const responseText = result.response.text();
+      const responseText = result.text;
       res.json(JSON.parse(responseText || '{}'));
     } catch (err: any) {
       console.error('❌ Gemini Error on server:', err);
@@ -165,24 +165,24 @@ MBTI: ${mbti}
     }
 
     try {
-      const ai = new GoogleGenAI(GEMINI_API_KEY);
+      const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
       const modelName = "gemini-1.5-flash";
       console.log(`🤖 Using model: ${modelName} for horoscope`);
-      const model = ai.getGenerativeModel({ model: modelName });
 
       const prompt = `Сгенерируй персонализированный гороскоп на сегодня для знака ${signRu}. 
 Учти текущий транзит Луны (в знаке ${transitMoonSignRu}).
 Тон: мистический, глубинный, поддерживающий.
 Верни ТОЛЬКО JSON: { "vibe": "название энергии (1-2 слова)", "text": "гороскоп (2-3 предложения)" }`;
 
-      const result = await model.generateContent({
+      const result = await ai.models.generateContent({
+        model: modelName,
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
+        config: {
           responseMimeType: "application/json",
         }
       });
 
-      const responseText = result.response.text();
+      const responseText = result.text;
       res.json(JSON.parse(responseText || '{}'));
     } catch (err: any) {
       console.error('❌ Horoscope AI Error:', err);
@@ -381,6 +381,12 @@ MBTI: ${mbti}
   app.all('/api/*', (req, res) => {
     console.warn(`[${new Date().toISOString()}] 404 API Not Found: ${req.method} ${req.url}`);
     res.status(404).json({ error: `API route ${req.method} ${req.url} not found` });
+  });
+
+  // Global Error handler for API requests
+  app.use('/api', (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error(`❌ [API Error] ${req.method} ${req.url}:`, err);
+    res.status(err.status || 500).json({ error: err.message || 'Server Error' });
   });
 
   // Vite integration
