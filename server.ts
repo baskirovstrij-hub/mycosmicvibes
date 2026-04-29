@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { Telegraf, Markup } from 'telegraf';
 import dotenv from 'dotenv';
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config();
 
@@ -69,35 +69,42 @@ async function startServer() {
     console.error('🔥 FATAL UNHANDLED REJECTION at:', promise, 'reason:', reason);
   });
   
-  // Helper for key logic
+  // Logic for picking the best AI Key
   const getAiKey = () => {
-    const key = (process.env.VITE_GEMINI_API_KEY && process.env.VITE_GEMINI_API_KEY !== 'MY_GEMINI_API_KEY') 
-      ? process.env.VITE_GEMINI_API_KEY 
-      : process.env.GEMINI_API_KEY;
-    return (key === 'MY_GEMINI_API_KEY') ? null : key;
+    // Priority: VITE_ variable (if it's not the placeholder) then fallback to system GEMINI_API_KEY
+    const key = (process.env.VITE_GEMINI_API_KEY && process.env.VITE_GEMINI_API_KEY !== 'AIzaSyBqFMcozBE835OsMSeGaZ0vgqr07KrKJq0' && process.env.VITE_GEMINI_API_KEY !== 'MY_GEMINI_API_KEY') 
+      ? process.env.VITE_GEMINI_API_KEY.trim() 
+      : process.env.GEMINI_API_KEY?.trim();
+    
+    if (!key || key === 'MY_GEMINI_API_KEY') return null;
+    return key;
   };
 
   const botEnabled = !!process.env.TELEGRAM_BOT_TOKEN;
   let bot: Telegraf | null = null;
 
   const handleDeepAnalysis = async (req: express.Request, res: express.Response) => {
+    console.log('📬 [API] /api/generate-deep-analysis | Body keys:', Object.keys(req.body));
     const { natalData, mbti } = req.body;
-    const key = getAiKey();
+    const apiKey = getAiKey();
 
-    if (!key) {
-      console.error('❌ GEMINI_API_KEY is missing or invalid in server environment');
+    if (!apiKey) {
+      console.error('❌ Missing API Key in server environment');
       return res.status(500).json({ error: 'AI key not configured on server. Please set VITE_GEMINI_API_KEY in Settings.' });
     }
 
     if (!natalData || !mbti) {
-      console.error('❌ Missing data in request:', { hasNatal: !!natalData, mbti });
-      return res.status(400).json({ error: 'Missing natalData or mbti in request body' });
+      return res.status(400).json({ error: 'Missing natalData or mbti' });
     }
 
     try {
-      const ai = new GoogleGenAI({ apiKey: key });
-      const modelName = "gemini-3-flash-preview"; 
-      console.log(`🤖 Using model: ${modelName} for deep analysis`);
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ 
+        model: "gemini-2.0-flash",
+        generationConfig: { responseMimeType: "application/json" }
+      });
+      
+      console.log(`🤖 Using model: gemini-2.0-flash for deep analysis`);
       
       const sunSign = natalData.planets?.find((p: any) => p.name === 'Sun')?.sign || 'Unknown';
       const moonSign = natalData.planets?.find((p: any) => p.name === 'Moon')?.sign || 'Unknown';
@@ -141,60 +148,44 @@ MBTI: ${mbti}
   "text": Итоговая вдохновляющая цитата-резюме (1-2 предложения), которая ставит точку в этом разборе.
 `;
 
-      console.log(`[Deep Analysis] Starting Gemini generation request...`);
-      const startTime = Date.now();
-      
-      const result = await ai.models.generateContent({
-        model: modelName,
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
-          responseMimeType: "application/json",
-        }
-      });
-
-      const elapsed = Date.now() - startTime;
-      console.log(`[Deep Analysis] Gemini generation successful! Took ${elapsed}ms`);
-      const responseText = result.text;
-      res.json(JSON.parse(responseText || '{}'));
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      res.json(JSON.parse(text || '{}'));
     } catch (err: any) {
-      console.error('❌ Gemini Error on server:', err);
+      console.error('❌ [API] Deep Analysis Error:', err);
       res.status(500).json({ error: err.message || 'Internal server error while generating analysis' });
     }
   };
 
   const handleHoroscope = async (req: express.Request, res: express.Response) => {
+    console.log('📬 [API] /api/generate-horoscope | Sign:', req.body.signRu);
     const { signRu, transitMoonSignRu } = req.body;
-    const key = getAiKey();
+    const apiKey = getAiKey();
 
-    if (!key) {
-      console.error('❌ Horoscope Key Error: GEMINI_API_KEY is missing or invalid on server');
-      return res.status(500).json({ error: 'AI key not configured on server. Please set VITE_GEMINI_API_KEY in Settings.' });
+    if (!apiKey) {
+      return res.status(500).json({ error: 'AI key not configured' });
     }
 
     try {
-      const ai = new GoogleGenAI({ apiKey: key });
-      const modelName = "gemini-3-flash-preview";
-      console.log(`🤖 Using model: ${modelName} for horoscope`);
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ 
+        model: "gemini-2.0-flash",
+        generationConfig: { responseMimeType: "application/json" }
+      });
 
       const prompt = `Сгенерируй персонализированный гороскоп на сегодня для знака ${signRu}. 
 Учти текущий транзит Луны (в знаке ${transitMoonSignRu}).
 Тон: мистический, глубинный, поддерживающий.
 Верни ТОЛЬКО JSON: { "vibe": "название энергии (1-2 слова)", "text": "гороскоп (2-3 предложения)" }`;
 
-      const result = await ai.models.generateContent({
-        model: modelName,
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
-          responseMimeType: "application/json",
-        }
-      });
-
-      const responseText = result.text;
-      res.json(JSON.parse(responseText || '{}'));
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      res.json(JSON.parse(text || '{}'));
     } catch (err: any) {
-      console.error('❌ Horoscope AI Error:', err);
-      const errorMsg = err.message || 'Internal AI error';
-      res.status(500).json({ error: errorMsg });
+      console.error('❌ [API] Horoscope Error:', err);
+      res.status(500).json({ error: err.message || 'Internal AI error' });
     }
   };
 
