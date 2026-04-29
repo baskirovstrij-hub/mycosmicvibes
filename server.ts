@@ -69,28 +69,23 @@ async function startServer() {
     console.error('🔥 FATAL UNHANDLED REJECTION at:', promise, 'reason:', reason);
   });
   
-  const GENAI_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-  console.log(`[INIT] AI Key present: ${!!GENAI_KEY}`);
-  console.log(`[INIT] BOT_TOKEN present: ${!!process.env.TELEGRAM_BOT_TOKEN}`);
-  
+  // Helper for key logic
+  const getAiKey = () => {
+    const key = (process.env.VITE_GEMINI_API_KEY && process.env.VITE_GEMINI_API_KEY !== 'MY_GEMINI_API_KEY') 
+      ? process.env.VITE_GEMINI_API_KEY 
+      : process.env.GEMINI_API_KEY;
+    return (key === 'MY_GEMINI_API_KEY') ? null : key;
+  };
+
   const botEnabled = !!process.env.TELEGRAM_BOT_TOKEN;
-
-  // Simple request logger
-  app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    next();
-  });
-
-  // Initialize Telegram Bot
   let bot: Telegraf | null = null;
 
   const handleDeepAnalysis = async (req: express.Request, res: express.Response) => {
-    console.log('📬 Handler: generate-deep-analysis | Body keys:', Object.keys(req.body));
     const { natalData, mbti } = req.body;
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+    const key = getAiKey();
 
-    if (!GEMINI_API_KEY) {
-      console.error('❌ GEMINI_API_KEY is missing in server environment');
+    if (!key) {
+      console.error('❌ GEMINI_API_KEY is missing or invalid in server environment');
       return res.status(500).json({ error: 'AI key not configured on server. Please set VITE_GEMINI_API_KEY in Settings.' });
     }
 
@@ -100,7 +95,7 @@ async function startServer() {
     }
 
     try {
-      const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: key });
       const modelName = "gemini-3-flash-preview"; 
       console.log(`🤖 Using model: ${modelName} for deep analysis`);
       
@@ -168,17 +163,16 @@ MBTI: ${mbti}
   };
 
   const handleHoroscope = async (req: express.Request, res: express.Response) => {
-    console.log('📬 Handler: generate-horoscope | Sign:', req.body.signRu);
     const { signRu, transitMoonSignRu } = req.body;
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+    const key = getAiKey();
 
-    if (!GEMINI_API_KEY) {
-      console.error('❌ Horoscope Key Error: GEMINI_API_KEY is missing on server');
+    if (!key) {
+      console.error('❌ Horoscope Key Error: GEMINI_API_KEY is missing or invalid on server');
       return res.status(500).json({ error: 'AI key not configured on server. Please set VITE_GEMINI_API_KEY in Settings.' });
     }
 
     try {
-      const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: key });
       const modelName = "gemini-3-flash-preview";
       console.log(`🤖 Using model: ${modelName} for horoscope`);
 
