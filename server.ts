@@ -1,5 +1,6 @@
 import fs from 'fs';
 import express from 'express';
+import cors from 'cors';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -15,7 +16,7 @@ const __dirname = path.dirname(__filename);
 const PORT = 3000;
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const PAYMENT_TOKEN = process.env.YOOKASSA_PROVIDER_TOKEN || process.env.PAYMENT_TOKEN;
-const APP_URL = process.env.VITE_APP_URL || 'https://cosmicvibes.app';
+const APP_URL = process.env.VITE_APP_URL && !process.env.VITE_APP_URL.includes('gen-lang-') ? process.env.VITE_APP_URL : (process.env.APP_URL || 'https://cosmicvibes.app');
 
 // Standard Firebase Admin setup for server-side updates
 import { initializeApp, cert } from 'firebase-admin/app';
@@ -365,6 +366,7 @@ MBTI: ${mbti}
   }
 
   // API Routes - defined BEFORE Vite middleware
+  app.use(cors());
   app.use(express.json({ limit: '5mb' }));
 
   app.post('/api/generate-deep-analysis', handleDeepAnalysis);
