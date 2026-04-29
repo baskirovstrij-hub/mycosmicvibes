@@ -101,7 +101,7 @@ async function startServer() {
 
     try {
       const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-      const modelName = "gemini-1.5-flash"; 
+      const modelName = "gemini-3-flash-preview"; 
       console.log(`🤖 Using model: ${modelName} for deep analysis`);
       
       const sunSign = natalData.planets?.find((p: any) => p.name === 'Sun')?.sign || 'Unknown';
@@ -179,7 +179,7 @@ MBTI: ${mbti}
 
     try {
       const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-      const modelName = "gemini-1.5-flash";
+      const modelName = "gemini-3-flash-preview";
       console.log(`🤖 Using model: ${modelName} for horoscope`);
 
       const prompt = `Сгенерируй персонализированный гороскоп на сегодня для знака ${signRu}. 
