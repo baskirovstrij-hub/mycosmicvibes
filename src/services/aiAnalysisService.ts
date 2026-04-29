@@ -1,5 +1,3 @@
-import { GoogleGenAI, Type } from "@google/genai";
-
 export interface AIAnalysisResponse {
   core: {
     title: string;

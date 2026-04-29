@@ -64,6 +64,8 @@ async function startServer() {
   const GENAI_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
   console.log(`[INIT] AI Key present: ${!!GENAI_KEY}`);
   console.log(`[INIT] BOT_TOKEN present: ${!!process.env.TELEGRAM_BOT_TOKEN}`);
+  
+  const botEnabled = !!process.env.TELEGRAM_BOT_TOKEN;
 
   // Simple request logger
   app.use((req, res, next) => {
@@ -83,6 +85,7 @@ async function startServer() {
     ]);
 
     bot.start((ctx) => {
+      console.log(`🤖 Bot received /start from ${ctx.from?.id} (@${ctx.from?.username})`);
       const firstName = ctx.from?.first_name || 'Странник';
       const welcomeMsg = `Приветствуем тебя в CosmicVibes, ${firstName}! ✨\n\nЯ — твой проводник в мир звезд и психологии. Исследуй свою натальную карту, узнай свой тип личности и получи глубокий разбор своей души.`;
       
@@ -223,7 +226,9 @@ async function startServer() {
       );
     });
 
-    bot.launch().then(() => {
+    bot.launch({
+      dropPendingUpdates: true
+    }).then(() => {
       console.log('✅ Telegram Bot is running');
     }).catch(err => {
       console.error('❌ Failed to start Telegram Bot:', err);
@@ -239,12 +244,23 @@ async function startServer() {
   // API Routes - defined BEFORE Vite middleware
   app.use(express.json({ limit: '1mb' }));
 
-  app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', bot_active: !!bot });
+  // Middleware to log all API requests specifically
+  app.use('/api', (req, res, next) => {
+    console.log(`📡 [API REQUEST] ${req.method} ${req.url}`);
+    next();
   });
 
-  app.post('/api/generate-deep-analysis', async (req, res) => {
-    console.log('📬 Received request for /api/generate-deep-analysis');
+  app.get('/api/health', (req, res) => {
+    res.json({ 
+      status: 'ok', 
+      bot_active: !!bot, 
+      bot_configured: botEnabled,
+      time: new Date().toISOString()
+    });
+  });
+
+  const handleDeepAnalysis = async (req: express.Request, res: express.Response) => {
+    console.log('📬 Handler: generate-deep-analysis');
     const { natalData, mbti } = req.body;
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
@@ -258,9 +274,12 @@ async function startServer() {
     }
 
     try {
-      const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-      const modelName = "gemini-3-flash-preview"; 
+      if (!GEMINI_API_KEY) throw new Error('API Key missing');
+      
+      const ai = new GoogleGenAI(GEMINI_API_KEY);
+      const modelName = "gemini-1.5-flash"; 
       console.log(`🤖 Using model: ${modelName} for deep analysis`);
+      const model = ai.getGenerativeModel({ model: modelName });
       
       const sunSign = natalData.planets?.find((p: any) => p.name === 'Sun')?.sign || 'Unknown';
       const moonSign = natalData.planets?.find((p: any) => p.name === 'Moon')?.sign || 'Unknown';
@@ -304,23 +323,23 @@ MBTI: ${mbti}
   "text": Итоговая вдохновляющая цитата-резюме (1-2 предложения), которая ставит точку в этом разборе.
 `;
 
-      const result = await ai.models.generateContent({
-        model: modelName,
+      const result = await model.generateContent({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
+        generationConfig: {
           responseMimeType: "application/json",
         }
       });
 
-      res.json(JSON.parse(result.text || '{}'));
+      const responseText = result.response.text();
+      res.json(JSON.parse(responseText || '{}'));
     } catch (err: any) {
       console.error('❌ Gemini Error on server:', err);
       res.status(500).json({ error: err.message || 'Internal server error while generating analysis' });
     }
   });
 
-  app.post('/api/generate-horoscope', async (req, res) => {
-    console.log('📬 Received request for /api/generate-horoscope');
+  const handleHoroscope = async (req: express.Request, res: express.Response) => {
+    console.log('📬 Handler: generate-horoscope');
     const { signRu, transitMoonSignRu } = req.body;
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
@@ -330,31 +349,35 @@ MBTI: ${mbti}
     }
 
     try {
-      const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-      const modelName = "gemini-3-flash-preview";
+      if (!GEMINI_API_KEY) throw new Error('API Key missing');
+      const ai = new GoogleGenAI(GEMINI_API_KEY);
+      const modelName = "gemini-1.5-flash";
       console.log(`🤖 Using model: ${modelName} for horoscope`);
+      const model = ai.getGenerativeModel({ model: modelName });
 
       const prompt = `Сгенерируй персонализированный гороскоп на сегодня для знака ${signRu}. 
 Учти текущий транзит Луны (в знаке ${transitMoonSignRu}).
 Тон: мистический, глубинный, поддерживающий.
 Верни ТОЛЬКО JSON: { "vibe": "название энергии (1-2 слова)", "text": "гороскоп (2-3 предложения)" }`;
 
-      const result = await ai.models.generateContent({
-        model: modelName,
+      const result = await model.generateContent({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
+        generationConfig: {
           responseMimeType: "application/json",
         }
       });
 
-      const responseText = result.text || '{}';
-      res.json(JSON.parse(responseText));
+      const responseText = result.response.text();
+      res.json(JSON.parse(responseText || '{}'));
     } catch (err: any) {
       console.error('❌ Horoscope AI Error:', err);
       const errorMsg = err.message || 'Internal AI error';
       res.status(500).json({ error: errorMsg });
     }
-  });
+  };
+
+  app.post(['/api/generate-deep-analysis', '*/api/generate-deep-analysis'], handleDeepAnalysis);
+  app.post(['/api/generate-horoscope', '*/api/generate-horoscope'], handleHoroscope);
 
   // Catch-all for API routes to avoid returning HTML
   app.all('/api/*', (req, res) => {
