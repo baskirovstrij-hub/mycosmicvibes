@@ -12,7 +12,7 @@ export default function AnalysisDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
 
-  const isPaid = profile?.isAnalysisPaid === true;
+  const isPaid = true; // profile?.isAnalysisPaid === true; (DEV: Temporarily bypassed)
 
   useEffect(() => {
     if (profile?.isAnalysisPaid) {

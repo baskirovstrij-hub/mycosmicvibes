@@ -75,6 +75,122 @@ async function startServer() {
 
   // Initialize Telegram Bot
   let bot: Telegraf | null = null;
+
+  const handleDeepAnalysis = async (req: express.Request, res: express.Response) => {
+    console.log('📬 Handler: generate-deep-analysis | Body keys:', Object.keys(req.body));
+    const { natalData, mbti } = req.body;
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+
+    if (!GEMINI_API_KEY) {
+      console.error('❌ GEMINI_API_KEY is missing in server environment');
+      return res.status(500).json({ error: 'AI key not configured on server. Please set VITE_GEMINI_API_KEY in Settings.' });
+    }
+
+    if (!natalData || !mbti) {
+      console.error('❌ Missing data in request:', { hasNatal: !!natalData, mbti });
+      return res.status(400).json({ error: 'Missing natalData or mbti in request body' });
+    }
+
+    try {
+      const ai = new GoogleGenAI(GEMINI_API_KEY);
+      const modelName = "gemini-1.5-flash"; 
+      console.log(`🤖 Using model: ${modelName} for deep analysis`);
+      const model = ai.getGenerativeModel({ model: modelName });
+      
+      const sunSign = natalData.planets?.find((p: any) => p.name === 'Sun')?.sign || 'Unknown';
+      const moonSign = natalData.planets?.find((p: any) => p.name === 'Moon')?.sign || 'Unknown';
+      const ascendantSign = natalData.ascendant?.sign || 'Unknown';
+      const saturnSign = natalData.planets?.find((p: any) => p.name === 'Saturn')?.sign || 'Unknown';
+      const plutoSign = natalData.planets?.find((p: any) => p.name === 'Pluto')?.sign || 'Unknown';
+
+      const prompt = `
+Вы — ведущий астропсихолог, помогающий девушке/женщине осознать ее жизненный путь.
+Составьте "Интеллектуальную карту личности", объединяя астрологию (Натальную карту) и MBTI.
+
+ДАННЫЕ ПОЛЬЗОВАТЕЛЯ:
+MBTI: ${mbti}
+Солнце: ${sunSign}
+Луна: ${moonSign}
+Асцендент: ${ascendantSign}
+Сатурн: ${saturnSign}
+Плутон: ${plutoSign}
+
+ВАЖНЫЕ ПРАВИЛА И ТОН:
+- Ваша целевая аудитория: девушки и молодые женщины, которые ищут смыслы.
+- Тон: Глубинный, астропсихологический, мистический, поддерживающий, но структурированный. Никакой излишней "воды", баланс "Структура (Dashboard) + Наполнение (Storytelling)".
+- Обращайтесь к пользователю на "вы", уважительно и поддерживающе.
+- Формат: Верните ТОЛЬКО валидный JSON с указанной структурой.
+
+СТРУКТУРА ОТВЕТА (JSON):
+"core": 
+  "title": Креативное название (например, "Душевный Стратег"). НЕ используйте слова "Ядро" или "Разбор" в этом заголовке.
+  "text": Синтез Солнца (${sunSign}) и доминирующих функций MBTI (${mbti}). Короткий, емкий нарратив о том, как она воспринимает мир и в чем её истинная природа.
+
+"shadow": 
+  "title": "Социальная маска и Тень",
+  "text": Асцендент (${ascendantSign}) (как её видят другие) + слабые функции MBTI (что она в себе отрицает или скрывает). Контрастный анализ внутреннего и внешнего.
+
+"growth":
+  "title": "Двигатель прогресса",
+  "points": 3 пункта развития на основе Сатурна (${saturnSign}) и Плутона (${plutoSign}) + точки роста ${mbti}.
+    В каждом пункте строго: "thesis" (Тезис), "cause" (Причина), "solution" (Решение/Рекомендация).
+
+"summary":
+  "text": Итоговая вдохновляющая цитата-резюме (1-2 предложения), которая ставит точку в этом разборе.
+`;
+
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+        }
+      });
+
+      const responseText = result.response.text();
+      res.json(JSON.parse(responseText || '{}'));
+    } catch (err: any) {
+      console.error('❌ Gemini Error on server:', err);
+      res.status(500).json({ error: err.message || 'Internal server error while generating analysis' });
+    }
+  };
+
+  const handleHoroscope = async (req: express.Request, res: express.Response) => {
+    console.log('📬 Handler: generate-horoscope | Sign:', req.body.signRu);
+    const { signRu, transitMoonSignRu } = req.body;
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+
+    if (!GEMINI_API_KEY) {
+      console.error('❌ Horoscope Key Error: GEMINI_API_KEY is missing on server');
+      return res.status(500).json({ error: 'AI key not configured on server. Please set VITE_GEMINI_API_KEY in Settings.' });
+    }
+
+    try {
+      const ai = new GoogleGenAI(GEMINI_API_KEY);
+      const modelName = "gemini-1.5-flash";
+      console.log(`🤖 Using model: ${modelName} for horoscope`);
+      const model = ai.getGenerativeModel({ model: modelName });
+
+      const prompt = `Сгенерируй персонализированный гороскоп на сегодня для знака ${signRu}. 
+Учти текущий транзит Луны (в знаке ${transitMoonSignRu}).
+Тон: мистический, глубинный, поддерживающий.
+Верни ТОЛЬКО JSON: { "vibe": "название энергии (1-2 слова)", "text": "гороскоп (2-3 предложения)" }`;
+
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+        }
+      });
+
+      const responseText = result.response.text();
+      res.json(JSON.parse(responseText || '{}'));
+    } catch (err: any) {
+      console.error('❌ Horoscope AI Error:', err);
+      const errorMsg = err.message || 'Internal AI error';
+      res.status(500).json({ error: errorMsg });
+    }
+  };
+
   if (BOT_TOKEN) {
     bot = new Telegraf(BOT_TOKEN);
 
@@ -247,18 +363,10 @@ async function startServer() {
   }
 
   // API Routes - defined BEFORE Vite middleware
-  app.use(express.json({ limit: '1mb' }));
+  app.use(express.json({ limit: '5mb' }));
 
-  // Explicitly handle API routes first
-  app.post('/api/generate-deep-analysis', async (req, res) => {
-    console.log('📬 [API] generate-deep-analysis');
-    await handleDeepAnalysis(req, res);
-  });
-
-  app.post('/api/generate-horoscope', async (req, res) => {
-    console.log('📬 [API] generate-horoscope');
-    await handleHoroscope(req, res);
-  });
+  app.post('/api/generate-deep-analysis', handleDeepAnalysis);
+  app.post('/api/generate-horoscope', handleHoroscope);
 
   app.get('/api/health', (req, res) => {
     res.json({ 
@@ -268,123 +376,6 @@ async function startServer() {
       time: new Date().toISOString()
     });
   });
-
-  const handleDeepAnalysis = async (req: express.Request, res: express.Response) => {
-    console.log('📬 Handler: generate-deep-analysis');
-    const { natalData, mbti } = req.body;
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-
-    if (!GEMINI_API_KEY) {
-      console.error('❌ GEMINI_API_KEY is missing in server environment');
-      return res.status(500).json({ error: 'AI key not configured on server. Please set VITE_GEMINI_API_KEY in Settings.' });
-    }
-
-    if (!natalData || !mbti) {
-      return res.status(400).json({ error: 'Missing natalData or mbti in request body' });
-    }
-
-    try {
-      if (!GEMINI_API_KEY) throw new Error('API Key missing');
-      
-      const ai = new GoogleGenAI(GEMINI_API_KEY);
-      const modelName = "gemini-1.5-flash"; 
-      console.log(`🤖 Using model: ${modelName} for deep analysis`);
-      const model = ai.getGenerativeModel({ model: modelName });
-      
-      const sunSign = natalData.planets?.find((p: any) => p.name === 'Sun')?.sign || 'Unknown';
-      const moonSign = natalData.planets?.find((p: any) => p.name === 'Moon')?.sign || 'Unknown';
-      const ascendantSign = natalData.ascendant?.sign || 'Unknown';
-      const saturnSign = natalData.planets?.find((p: any) => p.name === 'Saturn')?.sign || 'Unknown';
-      const plutoSign = natalData.planets?.find((p: any) => p.name === 'Pluto')?.sign || 'Unknown';
-
-      const prompt = `
-Вы — ведущий астропсихолог, помогающий девушке/женщине осознать ее жизненный путь.
-Составьте "Интеллектуальную карту личности", объединяя астрологию (Натальную карту) и MBTI.
-
-ДАННЫЕ ПОЛЬЗОВАТЕЛЯ:
-MBTI: ${mbti}
-Солнце: ${sunSign}
-Луна: ${moonSign}
-Асцендент: ${ascendantSign}
-Сатурн: ${saturnSign}
-Плутон: ${plutoSign}
-
-ВАЖНЫЕ ПРАВИЛА И ТОН:
-- Ваша целевая аудитория: девушки и молодые женщины, которые ищут смыслы.
-- Тон: Глубинный, астропсихологический, мистический, поддерживающий, но структурированный. Никакой излишней "воды", баланс "Структура (Dashboard) + Наполнение (Storytelling)".
-- Обращайтесь к пользователю на "вы", уважительно и поддерживающе.
-- Формат: Верните ТОЛЬКО валидный JSON с указанной структурой.
-
-СТРУКТУРА ОТВЕТА (JSON):
-"core": 
-  "title": Креативное название (например, "Душевный Стратег"). НЕ используйте слова "Ядро" или "Разбор" в этом заголовке.
-  "text": Синтез Солнца (${sunSign}) и доминирующих функций MBTI (${mbti}). Короткий, емкий нарратив о том, как она воспринимает мир и в чем её истинная природа.
-
-"shadow": 
-  "title": "Социальная маска и Тень",
-  "text": Асцендент (${ascendantSign}) (как её видят другие) + слабые функции MBTI (что она в себе отрицает или скрывает). Контрастный анализ внутреннего и внешнего.
-
-"growth":
-  "title": "Двигатель прогресса",
-  "points": 3 пункта развития на основе Сатурна (${saturnSign}) и Плутона (${plutoSign}) + точки роста ${mbti}.
-    В каждом пункте строго: "thesis" (Тезис), "cause" (Причина), "solution" (Решение/Рекомендация).
-
-"summary":
-  "text": Итоговая вдохновляющая цитата-резюме (1-2 предложения), которая ставит точку в этом разборе.
-`;
-
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-        }
-      });
-
-      const responseText = result.response.text();
-      res.json(JSON.parse(responseText || '{}'));
-    } catch (err: any) {
-      console.error('❌ Gemini Error on server:', err);
-      res.status(500).json({ error: err.message || 'Internal server error while generating analysis' });
-    }
-  };
-
-  const handleHoroscope = async (req: express.Request, res: express.Response) => {
-    console.log('📬 Handler: generate-horoscope');
-    const { signRu, transitMoonSignRu } = req.body;
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-
-    if (!GEMINI_API_KEY) {
-      console.error('❌ Horoscope Key Error: GEMINI_API_KEY is missing on server');
-      return res.status(500).json({ error: 'AI key not configured on server. Please set VITE_GEMINI_API_KEY in Settings.' });
-    }
-
-    try {
-      if (!GEMINI_API_KEY) throw new Error('API Key missing');
-      const ai = new GoogleGenAI(GEMINI_API_KEY);
-      const modelName = "gemini-1.5-flash";
-      console.log(`🤖 Using model: ${modelName} for horoscope`);
-      const model = ai.getGenerativeModel({ model: modelName });
-
-      const prompt = `Сгенерируй персонализированный гороскоп на сегодня для знака ${signRu}. 
-Учти текущий транзит Луны (в знаке ${transitMoonSignRu}).
-Тон: мистический, глубинный, поддерживающий.
-Верни ТОЛЬКО JSON: { "vibe": "название энергии (1-2 слова)", "text": "гороскоп (2-3 предложения)" }`;
-
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-        }
-      });
-
-      const responseText = result.response.text();
-      res.json(JSON.parse(responseText || '{}'));
-    } catch (err: any) {
-      console.error('❌ Horoscope AI Error:', err);
-      const errorMsg = err.message || 'Internal AI error';
-      res.status(500).json({ error: errorMsg });
-    }
-  };
 
   // Catch-all for API routes to avoid returning HTML
   app.all('/api/*', (req, res) => {
