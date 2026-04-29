@@ -12,7 +12,8 @@ export default function AnalysisDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
 
-  const isPaid = true; // profile?.isAnalysisPaid === true; (DEV: Temporarily bypassed)
+  // Read actual payment status from Firebase
+  const isPaid = profile?.isAnalysisPaid === true;
 
   useEffect(() => {
     if (profile?.isAnalysisPaid) {
