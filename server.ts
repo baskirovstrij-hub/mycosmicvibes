@@ -71,12 +71,15 @@ async function startServer() {
   
   // Logic for picking the best AI Key
   const getAiKey = () => {
-    // Priority: VITE_ variable (if it's not the placeholder) then fallback to system GEMINI_API_KEY
-    const key = (process.env.VITE_GEMINI_API_KEY && process.env.VITE_GEMINI_API_KEY !== 'AIzaSyBqFMcozBE835OsMSeGaZ0vgqr07KrKJq0' && process.env.VITE_GEMINI_API_KEY !== 'MY_GEMINI_API_KEY') 
+    // Priority: VITE_ variable then fallback to system GEMINI_API_KEY.
+    // We check for common placeholders to avoid using invalid keys.
+    const key = (process.env.VITE_GEMINI_API_KEY && 
+                 !process.env.VITE_GEMINI_API_KEY.includes('YOUR_GEMINI') && 
+                 !process.env.VITE_GEMINI_API_KEY.includes('MY_GEMINI')) 
       ? process.env.VITE_GEMINI_API_KEY.trim() 
       : process.env.GEMINI_API_KEY?.trim();
     
-    if (!key || key === 'MY_GEMINI_API_KEY') return null;
+    if (!key || key.includes('YOUR_GEMINI') || key.includes('MY_GEMINI')) return null;
     return key;
   };
 
@@ -99,12 +102,13 @@ async function startServer() {
 
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
+      // Using gemini-3-flash-preview for fresh quota and better logic
       const model = genAI.getGenerativeModel({ 
-        model: "gemini-2.0-flash",
+        model: "gemini-3-flash-preview",
         generationConfig: { responseMimeType: "application/json" }
       });
       
-      console.log(`🤖 Using model: gemini-2.0-flash for deep analysis`);
+      console.log(`🤖 Using model: gemini-3-flash-preview for deep analysis`);
       
       const sunSign = natalData.planets?.find((p: any) => p.name === 'Sun')?.sign || 'Unknown';
       const moonSign = natalData.planets?.find((p: any) => p.name === 'Moon')?.sign || 'Unknown';
@@ -170,7 +174,7 @@ MBTI: ${mbti}
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ 
-        model: "gemini-2.0-flash",
+        model: "gemini-3-flash-preview",
         generationConfig: { responseMimeType: "application/json" }
       });
 
