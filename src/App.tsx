@@ -213,23 +213,6 @@ export default function App() {
             className="w-12 h-12 border-2 border-purple-500/20 border-t-purple-500 rounded-full"
           />
           <p className="text-gray-500 text-[10px] uppercase tracking-[0.3em] animate-pulse">Синхронизация со звездами...</p>
-          
-          <div className="absolute bottom-10 flex flex-col items-center space-y-2">
-             <button 
-               onClick={async () => {
-                 try {
-                   const res = await fetch('/api/health');
-                   const data = await res.json();
-                   alert(`Server: ${JSON.stringify(data)}`);
-                 } catch (e: any) {
-                   alert(`Error: ${e.message}`);
-                 }
-               }}
-               className="text-[8px] text-gray-700 uppercase tracking-widest hover:text-gray-500 transition-colors"
-             >
-               Проверить связь
-             </button>
-          </div>
         </div>
       </Layout>
     );

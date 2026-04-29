@@ -84,6 +84,11 @@ async function startServer() {
       { command: 'help', description: 'Помощь и инструкции' }
     ]);
 
+    bot.on('message', (ctx, next) => {
+      console.log(`📩 Bot received message: ${'text' in ctx.message ? ctx.message.text : 'non-text'} from ${ctx.from.id}`);
+      return next();
+    });
+
     bot.start((ctx) => {
       console.log(`🤖 Bot received /start from ${ctx.from?.id} (@${ctx.from?.username})`);
       const firstName = ctx.from?.first_name || 'Странник';
@@ -244,10 +249,15 @@ async function startServer() {
   // API Routes - defined BEFORE Vite middleware
   app.use(express.json({ limit: '1mb' }));
 
-  // Middleware to log all API requests specifically
-  app.use('/api', (req, res, next) => {
-    console.log(`📡 [API REQUEST] ${req.method} ${req.url}`);
-    next();
+  // Explicitly handle API routes first
+  app.post('/api/generate-deep-analysis', async (req, res) => {
+    console.log('📬 [API] generate-deep-analysis');
+    await handleDeepAnalysis(req, res);
+  });
+
+  app.post('/api/generate-horoscope', async (req, res) => {
+    console.log('📬 [API] generate-horoscope');
+    await handleHoroscope(req, res);
   });
 
   app.get('/api/health', (req, res) => {
@@ -336,7 +346,7 @@ MBTI: ${mbti}
       console.error('❌ Gemini Error on server:', err);
       res.status(500).json({ error: err.message || 'Internal server error while generating analysis' });
     }
-  });
+  };
 
   const handleHoroscope = async (req: express.Request, res: express.Response) => {
     console.log('📬 Handler: generate-horoscope');
@@ -375,9 +385,6 @@ MBTI: ${mbti}
       res.status(500).json({ error: errorMsg });
     }
   };
-
-  app.post(['/api/generate-deep-analysis', '*/api/generate-deep-analysis'], handleDeepAnalysis);
-  app.post(['/api/generate-horoscope', '*/api/generate-horoscope'], handleHoroscope);
 
   // Catch-all for API routes to avoid returning HTML
   app.all('/api/*', (req, res) => {
